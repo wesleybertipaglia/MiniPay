@@ -28,7 +28,7 @@ services:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: minipay_db_auth
     ports:
-      - "5420:5432"
+      - "5410:5432"
     volumes:
       - minipay_db_data_auth:/var/lib/postgresql/data
     networks:
@@ -70,9 +70,23 @@ services:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: minipay_db_transaction
     ports:
-      - "5420:5432"
+      - "5440:5432"
     volumes:
       - minipay_db_data_transaction:/var/lib/postgresql/data
+    networks:
+      - minipay_network
+
+  minipay_db_verification:
+    image: postgres:latest
+    container_name: minipay_db_verification
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: minipay_db_verification
+    ports:
+      - "5450:5432"
+    volumes:
+      - minipay_db_data_verification:/var/lib/postgresql/data
     networks:
       - minipay_network
 
@@ -83,6 +97,7 @@ volumes:
   minipay_db_data_user:
   minipay_db_data_wallet:
   minipay_db_data_transaction:
+  minipay_db_data_verification:
 
 networks:
   minipay_network:

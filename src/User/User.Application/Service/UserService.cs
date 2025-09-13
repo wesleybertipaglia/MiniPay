@@ -7,46 +7,36 @@ using User.Core.Mapper;
 
 namespace User.Application.Service;
 
-public class UserService : IUserService
+public class UserService(
+    IUserRepository userRepository,
+    ILogger<UserService> logger,
+    ICacheService cacheService)
+    : IUserService
 {
-    private readonly IUserRepository _userRepository;
-    private readonly ILogger<UserService> _logger;
-    private readonly ICacheService _cacheService;
-
-    public UserService(
-        IUserRepository userRepository,
-        ILogger<UserService> logger,
-        ICacheService cacheService)
-    {
-        this._userRepository = userRepository;
-        this._logger = logger;
-        this._cacheService = cacheService;
-    }
-    
     public async Task<UserDto> GetByIdAsync(Guid id)
     {
         var cacheKey = CacheKeysHelper.GetUserIdKey(id);
 
-        var cachedUser = await _cacheService.GetAsync<UserDto>(cacheKey);
+        var cachedUser = await cacheService.GetAsync<UserDto>(cacheKey);
         if (cachedUser != null)
         {
-            LogHelper.LogInfo(_logger, "[CACHE HIT] User found in cache for ID {UserId}", [id]);
+            LogHelper.LogInfo(logger, "[CACHE HIT] User found in cache for ID {UserId}", [id]);
             return cachedUser;
         }
 
-        LogHelper.LogInfo(_logger, "Fetching user by ID: {UserId}", [id]);
+        LogHelper.LogInfo(logger, "Fetching user by ID: {UserId}", [id]);
 
-        var user = await _userRepository.GetByIdAsync(id);
+        var user = await userRepository.GetByIdAsync(id);
         if (user == null)
         {
-            LogHelper.LogWarning(_logger, "User with ID {UserId} not found.", [id]);
+            LogHelper.LogWarning(logger, "User with ID {UserId} not found.", [id]);
             throw new Exception($"User with ID '{id}' not found.");
         }
 
-        LogHelper.LogInfo(_logger, "User found: {UserId}", [id]);
+        LogHelper.LogInfo(logger, "User found: {UserId}", [id]);
 
         var userDto = user.Map();
-        await _cacheService.SetAsync(cacheKey, userDto, TimeSpan.FromMinutes(5));
+        await cacheService.SetAsync(cacheKey, userDto, TimeSpan.FromMinutes(5));
 
         return userDto;
     }
@@ -55,36 +45,36 @@ public class UserService : IUserService
     {
         var cacheKey = CacheKeysHelper.GetUserEmailKey(email);
 
-        var cachedUser = await _cacheService.GetAsync<UserDto>(cacheKey);
+        var cachedUser = await cacheService.GetAsync<UserDto>(cacheKey);
         if (cachedUser != null)
         {
-            LogHelper.LogInfo(_logger, "[CACHE HIT] User found in cache for Email {Email}", [email]);
+            LogHelper.LogInfo(logger, "[CACHE HIT] User found in cache for Email {Email}", [email]);
             return cachedUser;
         }
 
-        LogHelper.LogInfo(_logger, "Fetching user by email: {Email}", [email]);
+        LogHelper.LogInfo(logger, "Fetching user by email: {Email}", [email]);
 
-        var user = await _userRepository.GetByEmailAsync(email);
+        var user = await userRepository.GetByEmailAsync(email);
         if (user == null)
         {
-            LogHelper.LogWarning(_logger, "User with email {Email} not found.", [email]);
+            LogHelper.LogWarning(logger, "User with email {Email} not found.", [email]);
             throw new Exception($"User with email '{email}' not found.");
         }
 
-        LogHelper.LogInfo(_logger, "User found with email: {Email}", [email]);
+        LogHelper.LogInfo(logger, "User found with email: {Email}", [email]);
 
         var userDto = user.Map();
-        await _cacheService.SetAsync(cacheKey, userDto, TimeSpan.FromMinutes(5));
+        await cacheService.SetAsync(cacheKey, userDto, TimeSpan.FromMinutes(5));
 
         return userDto;
     }
 
     public async Task<UserDto> UpdateAsync(UserDto userDto)
     {
-        var user = await _userRepository.GetByIdAsync(userDto.Id);
+        var user = await userRepository.GetByIdAsync(userDto.Id);
         if (user == null)
         {
-            LogHelper.LogWarning(_logger, "User with ID {UserId} not found for update.", [userDto.Id]);
+            LogHelper.LogWarning(logger, "User with ID {UserId} not found for update.", [userDto.Id]);
             throw new Exception($"User with ID '{userDto.Id}' not found.");
         }
 
@@ -97,15 +87,15 @@ public class UserService : IUserService
             user.Email = userDto.Email;
         }
 
-        var updatedUser = await _userRepository.UpdateAsync(user);
+        var updatedUser = await userRepository.UpdateAsync(user);
 
         var cacheKeyById = CacheKeysHelper.GetUserIdKey(updatedUser.Id);
         var cacheKeyByEmail = CacheKeysHelper.GetUserEmailKey(updatedUser.Email);
 
-        await _cacheService.RemoveAsync(cacheKeyById);
-        await _cacheService.RemoveAsync(cacheKeyByEmail);
+        await cacheService.RemoveAsync(cacheKeyById);
+        await cacheService.RemoveAsync(cacheKeyByEmail);
 
-        LogHelper.LogInfo(_logger, "User updated: {UserId}", [updatedUser.Id]);
+        LogHelper.LogInfo(logger, "User updated: {UserId}", [updatedUser.Id]);
 
         return updatedUser.Map();
     }

@@ -1,0 +1,89 @@
+services:
+  minipay_rabbitmq:
+    image: rabbitmq:3-management
+    container_name: minipay_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - minipay_rmq_data:/var/lib/rabbitmq
+    networks:
+      - minipay_network
+
+  minipay_redis:
+    image: redis:latest
+    container_name: minipay_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - minipay_redis_data:/data    
+    networks:
+      - minipay_network
+
+  minipay_db_auth:
+    image: postgres:latest
+    container_name: minipay_db_auth
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: minipay_db_auth
+    ports:
+      - "5420:5432"
+    volumes:
+      - minipay_db_data_auth:/var/lib/postgresql/data
+    networks:
+      - minipay_network
+
+  minipay_db_user:
+    image: postgres:latest
+    container_name: minipay_db_user
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: minipay_db_user
+    ports:
+      - "5420:5432"
+    volumes:
+      - minipay_db_data_user:/var/lib/postgresql/data
+    networks:
+      - minipay_network
+
+  minipay_db_wallet:
+    image: postgres:latest
+    container_name: minipay_db_wallet
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: minipay_db_wallet
+    ports:
+      - "5430:5432"
+    volumes:
+      - minipay_db_data_wallet:/var/lib/postgresql/data
+    networks:
+      - minipay_network
+
+  minipay_db_transaction:
+    image: postgres:latest
+    container_name: minipay_db_transaction
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: minipay_db_transaction
+    ports:
+      - "5420:5432"
+    volumes:
+      - minipay_db_data_transaction:/var/lib/postgresql/data
+    networks:
+      - minipay_network
+
+volumes:
+  minipay_rmq_data:
+  minipay_redis_data:
+  minipay_db_data_auth:
+  minipay_db_data_user:
+  minipay_db_data_wallet:
+  minipay_db_data_transaction:
+
+networks:
+  minipay_network:
+    driver: bridge

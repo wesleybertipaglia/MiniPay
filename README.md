@@ -35,7 +35,9 @@ The system consists of the following microservices:
 3. **Wallet Service**: Manages user wallets and balances.
 4. **Transaction Service**: Handles financial transactions such as deposits, withdrawals, transfers, and payments.
 5. **Notification Service**: Simulates sending transactional emails (e.g., email confirmations).
-6. **API Gateway**: Routes requests to the appropriate microservices and handles authentication and rate limiting.
+6. **Verification Service**: Handles verification codes for actions such as email confirmation.
+7. **Shared Library**: Contains common utilities and models used across services.
+8. **API Gateway**: Routes requests to the appropriate microservices and handles authentication and rate limiting.
 
 ## Getting Started
 
@@ -66,6 +68,7 @@ dotnet run --project User/User.Api
 dotnet run --project Wallet/Wallet.Api
 dotnet run --project Transaction/Transaction.Api
 dotnet run --project Notification/Notification.Api
+dotnet run --project Verification/Verification.Api
 dotnet run --project ApiGateway/ApiGateway.Api
 ```
 

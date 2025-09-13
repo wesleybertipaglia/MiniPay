@@ -63,13 +63,13 @@ Each service has its own solution and follows a layered architecture. You can ru
 
 ```bash
 dotnet build
-dotnet run --project Authentication/Authentication.Api
-dotnet run --project User/User.Api
-dotnet run --project Wallet/Wallet.Api
-dotnet run --project Transaction/Transaction.Api
-dotnet run --project Notification/Notification.Api
-dotnet run --project Verification/Verification.Api
-dotnet run --project ApiGateway/ApiGateway.Api
+dotnet run --project Authentication/Authentication.Api    # port 5010
+dotnet run --project User/User.Api                        # port 5020
+dotnet run --project Wallet/Wallet.Api                    # port 5030
+dotnet run --project Transaction/Transaction.Api          # port 5040
+dotnet run --project Verification/Verification.Api        # port 5050
+dotnet run --project Notification/Notification.Api        # port 5060
+dotnet run --project ApiGateway/ApiGateway.Api            # port 5000
 ```
 
 ## Usage

@@ -8,7 +8,15 @@ public class User : BaseModel
     
     public string Email { get; set; }
 
-    public string Password { get; set; }
-
     public bool EmailConfirmed { get; set; } = false;
+
+    public User() { }
+
+    public User(Guid id, string code, string name, string email)
+    {
+        Id = id;
+        Code = code;
+        Name = name;
+        Email = email;
+    }
 }

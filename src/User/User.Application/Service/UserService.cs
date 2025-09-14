@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
+using Shared.Core.Dto;
 using Shared.Core.Helpers;
 using Shared.Core.Interface;
-using User.Core.Dto;
 using User.Core.Interface;
 using User.Core.Mapper;
 
@@ -20,25 +20,20 @@ public class UserService(
         var cachedUser = await cacheService.GetAsync<UserDto>(cacheKey);
         if (cachedUser != null)
         {
-            LogHelper.LogInfo(logger, "[CACHE HIT] User found in cache for ID {UserId}", [id]);
+            LogHelper.LogInfo(logger, $"[CACHE HIT] User found in cache for ID {id}");
             return cachedUser;
         }
 
-        LogHelper.LogInfo(logger, "Fetching user by ID: {UserId}", [id]);
-
         var user = await userRepository.GetByIdAsync(id);
-        if (user == null)
+        if (user is null)
         {
-            LogHelper.LogWarning(logger, "User with ID {UserId} not found.", [id]);
-            throw new Exception($"User with ID '{id}' not found.");
+            var message = $"User with ID '{id}' not found.";
+            LogHelper.LogError(logger, message);
+            throw new Exception(message);
         }
 
-        LogHelper.LogInfo(logger, "User found: {UserId}", [id]);
-
-        var userDto = user.Map();
-        await cacheService.SetAsync(cacheKey, userDto, TimeSpan.FromMinutes(5));
-
-        return userDto;
+        await cacheService.SetAsync(cacheKey, user.Map(), TimeSpan.FromMinutes(5));
+        return user.Map();
     }
 
     public async Task<UserDto> GetByEmailAsync(string email)
@@ -48,60 +43,67 @@ public class UserService(
         var cachedUser = await cacheService.GetAsync<UserDto>(cacheKey);
         if (cachedUser != null)
         {
-            LogHelper.LogInfo(logger, "[CACHE HIT] User found in cache for Email {Email}", [email]);
+            LogHelper.LogInfo(logger, $"[CACHE HIT] User found in cache for Email {email}");
             return cachedUser;
         }
 
-        LogHelper.LogInfo(logger, "Fetching user by email: {Email}", [email]);
-
         var user = await userRepository.GetByEmailAsync(email);
-        if (user == null)
+        if (user is null)
         {
-            LogHelper.LogWarning(logger, "User with email {Email} not found.", [email]);
-            throw new Exception($"User with email '{email}' not found.");
+            var message = $"User with email '{email}' not found.";
+            LogHelper.LogError(logger, message);
+            throw new Exception(message);
         }
 
-        LogHelper.LogInfo(logger, "User found with email: {Email}", [email]);
+        await cacheService.SetAsync(cacheKey, user.Map(), TimeSpan.FromMinutes(5));
+        return user.Map();
+    }
 
-        var userDto = user.Map();
-        await cacheService.SetAsync(cacheKey, userDto, TimeSpan.FromMinutes(5));
+    public async Task<UserDto> CreateAsync(UserDto userDto)
+    {
+        var existing = await userRepository.GetByIdAsync(userDto.Id);
+        if (existing != null)
+        {
+            LogHelper.LogError(logger, $"User with ID '{userDto.Id}' already exists.");
+            throw new Exception($"User with ID '{userDto.Id}' already exists.");
+        }
 
-        return userDto;
+        var user = userDto.Map();
+        await userRepository.CreateAsync(user);
+        
+        await InvalidateUserCache(user);
+
+        LogHelper.LogInfo(logger, $"User updated successfully: {user.Id}");
+        return user.Map();
     }
 
     public async Task<UserDto> UpdateAsync(UserDto userDto)
     {
         var user = await userRepository.GetByIdAsync(userDto.Id);
-        if (user == null)
+        if (user is null)
         {
-            LogHelper.LogWarning(logger, "User with ID {UserId} not found for update.", [userDto.Id]);
-            throw new Exception($"User with ID '{userDto.Id}' not found.");
+            var message = $"User with ID '{userDto.Id}' not found.";
+            LogHelper.LogError(logger, message);
+            throw new Exception(message);
         }
-
-        if (!string.IsNullOrEmpty(userDto.Name))
-        {
-            user.Name = userDto.Name;
-        }
-        if (!string.IsNullOrEmpty(userDto.Email))
-        {
-            user.Email = userDto.Email;
-        }
+        
+        if (!string.IsNullOrEmpty(userDto.Name)) user.Name = userDto.Name;
+        if (!string.IsNullOrEmpty(userDto.Email)) user.Email = userDto.Email;
 
         var updatedUser = await userRepository.UpdateAsync(user);
+        
+        await InvalidateUserCache(updatedUser);
 
-        var cacheKeyById = CacheKeysHelper.GetUserIdKey(updatedUser.Id);
-        var cacheKeyByEmail = CacheKeysHelper.GetUserEmailKey(updatedUser.Email);
-
-        await cacheService.RemoveAsync(cacheKeyById);
-        await cacheService.RemoveAsync(cacheKeyByEmail);
-
-        LogHelper.LogInfo(logger, "User updated: {UserId}", [updatedUser.Id]);
-
+        LogHelper.LogInfo(logger, $"User updated successfully: {updatedUser.Id}");
         return updatedUser.Map();
     }
 
-    public Task<UserDto> ConfirmEmailAsync(Guid userId)
+    private async Task InvalidateUserCache(Core.Model.User user)
     {
-        throw new NotImplementedException();
+        var keyById = CacheKeysHelper.GetUserIdKey(user.Id);
+        var keyByEmail = CacheKeysHelper.GetUserEmailKey(user.Email);
+
+        await cacheService.RemoveAsync(keyById);
+        await cacheService.RemoveAsync(keyByEmail);
     }
 }

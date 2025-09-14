@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using User.Core.Dto;
+using Shared.Core.Dto;
 using User.Core.Interface;
 
 namespace User.Api.Controller;

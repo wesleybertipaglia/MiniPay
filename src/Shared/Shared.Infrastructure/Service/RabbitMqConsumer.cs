@@ -41,7 +41,7 @@ public class RabbitMqConsumer(ILogger<RabbitMqConsumer> logger) : IMessageConsum
             }
             catch (Exception ex)
             {
-                LogHelper.LogError(logger, ex, "Error processing message");
+                LogHelper.LogError(logger, "Error processing message");
                 await _channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: true);
             }
         };

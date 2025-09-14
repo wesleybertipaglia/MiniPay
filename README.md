@@ -31,13 +31,46 @@ A distributed microservices-based banking system for simulating basic financial 
 The system consists of the following microservices:
 
 1. **Authentication Service**: Manages user registration, authentication, and JWT token issuance.
-2. **User Service**: Handles user profile management and email confirmation.
-3. **Wallet Service**: Manages user wallets and balances.
-4. **Transaction Service**: Handles financial transactions such as deposits, withdrawals, transfers, and payments.
-5. **Notification Service**: Simulates sending transactional emails (e.g., email confirmations).
-6. **Verification Service**: Handles verification codes for actions such as email confirmation.
+2. **User Service**: Handles user profile management and email confirmation (excluding password).
+3. **Wallet Service**: Manages user wallets and balances (only updated via events).
+4. **Transaction Service**: Handles creation and listing of financial transactions (e.g., deposits, transfers).
+5. **Notification Service**: Simulates sending transactional emails (e.g., email confirmation).
+6. **Verification Service**: Generates and manages verification codes for user actions (e.g., email confirmation).
 7. **Shared Library**: Contains common utilities and models used across services.
-8. **API Gateway**: Routes requests to the appropriate microservices and handles authentication and rate limiting.
+8. **API Gateway**: Routes external HTTP requests to the appropriate services and handles JWT-based authentication and rate limiting.
+
+> All services are connected through a Docker network and share a centralized Redis instance for caching.
+> Only the API Gateway is exposed externally. The **Verification** and **Notification** services are internal-only.
+
+### User Created Flow
+
+```text
+Event: user created
+  → queue: new user              → `user service` creates profile
+  → queue: new user              → `wallet service` creates wallet
+  → queue: new user              → `verification service` generates verification code
+      → queue: new notification  → `notification service` sends verification email
+````
+
+* The `user created` event is published after signup.
+* Each consumer handles part of the process:
+
+  * `user service`: stores user profile (excluding password)
+  * `wallet service`: creates a wallet
+  * `verification service`: generates verification code
+  * `notification service`: sends verification email
+
+### Transaction Flow
+
+```text
+Event: transaction created
+  → queue: update wallet         → wallet service
+```
+
+* After a transaction is created, an event is emitted.
+* The `wallet service` consumes the event to update the balance and invalidate cached wallet data in Redis.
+
+> **Wallet balances are never updated via API — only through events.**
 
 ## Getting Started
 

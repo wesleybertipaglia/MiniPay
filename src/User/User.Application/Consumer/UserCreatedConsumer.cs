@@ -18,7 +18,7 @@ public class UserCreatedConsumer(
 
         await messageConsumer.ConsumeAsync(
             exchange: "user-exchange",
-            queue: "new user",
+            queue: "new-user",
             routingKey: "user.created",
             onMessageReceived: async (message) =>
             {

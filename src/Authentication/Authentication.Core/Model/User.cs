@@ -4,22 +4,28 @@ namespace Authentication.Core.Model;
 
 public class User : BaseModel
 {
-    public string Name { get; set; }
+    public string Name { get; init; }
     
-    public string Email { get; set; }
+    public string Email { get; init; }
     
     public string Password { get; set; }
 
     public User() { }
 
-    public User(string name, string email)
+    public User(string name, string email, string password)
     {
         Name = name;
         Email = email;
+        Password = BCrypt.Net.BCrypt.HashPassword(password);
+    }
+    
+    public void SetPassword(string newPassword)
+    {
+        Password = BCrypt.Net.BCrypt.HashPassword(newPassword);
     }
 
-    public void SetPassword(string hashedPassword)
+    public bool ValidatePassword(string password)
     {
-        Password = hashedPassword;
+        return BCrypt.Net.BCrypt.Verify(password, Password);
     }
 }

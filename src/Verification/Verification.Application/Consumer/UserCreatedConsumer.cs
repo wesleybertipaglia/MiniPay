@@ -20,7 +20,7 @@ public class UserCreatedConsumer(
 
         await messageConsumer.ConsumeAsync(
             exchange: "user-exchange",
-            queue: "verification user created",
+            queue: "new-email-verification-code",
             routingKey: "user.created",
             async message =>
             {

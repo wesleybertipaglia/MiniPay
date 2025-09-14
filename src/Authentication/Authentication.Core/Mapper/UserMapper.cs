@@ -6,14 +6,14 @@ namespace Authentication.Core.Mapper;
 
 public static class UserMapper
 {
-    public static User Map(this SignUpRequestDto signUpRequestDto)
+    public static User Map(this SignUpRequestDto dto)
     {
-        return new User()
-        {
-            Name = signUpRequestDto.Name,
-            Email = signUpRequestDto.Email,
-            Password = BCrypt.Net.BCrypt.HashPassword(signUpRequestDto.Password),
-        };
+        return new User
+        (
+            name:  dto.Name,
+            email:  dto.Email,
+            password: dto.Password
+        );
     }
 
     public static UserDto Map(this User user)

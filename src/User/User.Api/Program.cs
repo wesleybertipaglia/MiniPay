@@ -98,7 +98,6 @@ try
     
     builder.Services.AddScoped<IUserRepository, UserRepository>();
     builder.Services.AddScoped<IUserService, UserService>();
-    builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
     builder.Services.AddScoped<ICacheService, RedisCacheService>();
     builder.Services.AddSingleton<IMessageConsumer, RabbitMqConsumer>();
     builder.Services.AddHostedService<UserCreatedConsumer>();

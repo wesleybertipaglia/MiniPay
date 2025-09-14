@@ -17,6 +17,7 @@ namespace Verification.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Type = table.Column<int>(type: "integer", nullable: false),
                     Content = table.Column<string>(type: "text", nullable: false),
                     Used = table.Column<bool>(type: "boolean", nullable: false),
                     VerifiedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),

@@ -1,16 +1,18 @@
-using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 using Shared.Core.Dto;
 using Shared.Core.Interface;
-using User.Core.Interface;
+using Verification.Core.Enum;
+using Verification.Core.Interface;
 
-namespace User.Application.Consumer;
+namespace Verification.Application.Consumer;
 
 public class UserCreatedConsumer(
-    IServiceProvider serviceProvider,
-    ILogger<UserCreatedConsumer> logger) : BackgroundService
+    IServiceProvider serviceProvider, 
+    ILogger<UserCreatedConsumer> logger)
+    : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -18,28 +20,28 @@ public class UserCreatedConsumer(
 
         await messageConsumer.ConsumeAsync(
             exchange: "user-exchange",
-            queue: "new user",
+            queue: "verification user created",
             routingKey: "user.created",
-            onMessageReceived: async (message) =>
+            async message =>
             {
                 try
                 {
                     var userDto = JsonSerializer.Deserialize<UserDto>(message);
-                    if (userDto is null)
+                    if (userDto == null)
                     {
-                        logger.LogError("Received null or invalid UserDto.");
+                        logger.LogError("Invalid user DTO.");
                         return;
                     }
                     
                     using var scope = serviceProvider.CreateScope();
-                    var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+                    var verificationService = scope.ServiceProvider.GetRequiredService<IVerificationCodeService>();
+                    await verificationService.CreateAsync(userDto.Id, VerificationCodeType.EMAIL_VERIFICATION);
 
-                    await userService.CreateAsync(userDto);
-                    logger.LogInformation("Processed user.created event for user {UserId}", userDto.Id);
+                    logger.LogInformation($"Verification code created for user {userDto.Id}");
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "Failed to process user.created event");
+                    logger.LogError(ex, "Error processing message");
                 }
             });
     }

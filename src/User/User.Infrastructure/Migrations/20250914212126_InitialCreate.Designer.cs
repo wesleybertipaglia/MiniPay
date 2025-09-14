@@ -12,7 +12,7 @@ using User.Infrastructure.Data;
 namespace User.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250913190928_InitialCreate")]
+    [Migration("20250914212126_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -46,10 +46,6 @@ namespace User.Infrastructure.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("text");
 

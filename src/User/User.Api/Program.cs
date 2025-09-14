@@ -8,6 +8,7 @@ using Serilog;
 using Shared.Core.Interface;
 using Shared.Infrastructure.Service;
 using StackExchange.Redis;
+using User.Application.Consumer;
 using User.Application.Service;
 using User.Core.Interface;
 using User.Infrastructure.Data;
@@ -99,6 +100,8 @@ try
     builder.Services.AddScoped<IUserService, UserService>();
     builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
     builder.Services.AddScoped<ICacheService, RedisCacheService>();
+    builder.Services.AddSingleton<IMessageConsumer, RabbitMqConsumer>();
+    builder.Services.AddHostedService<UserCreatedConsumer>();
 
     var app = builder.Build();
 

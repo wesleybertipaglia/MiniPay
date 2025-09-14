@@ -1,0 +1,12 @@
+namespace Verification.Core.Enum;
+
+public enum VerificationCodeType
+{
+    NONE,
+    EMAIL_VERIFICATION,
+    PHONE_VERIFICATION,
+    PASSWORD_RESET,
+    TWO_FACTOR_AUTHENTICATION,
+    ACCOUNT_DELETE_VERIFICATION,
+    DEVICE_VERIFICATION
+}

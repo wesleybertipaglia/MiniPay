@@ -27,12 +27,11 @@ public static class LogHelper
 
     public static void LogError<T>(
         ILogger<T> logger,
-        Exception ex,
         string message,
         object[]? args = null,
         [CallerMemberName] string methodName = "")
     {
         var tag = $"({typeof(T).Name}_{methodName})";
-        logger.LogError(ex, tag + " " + message, args ?? []);
+        logger.LogError(tag + " " + message, args ?? []);
     }
 }

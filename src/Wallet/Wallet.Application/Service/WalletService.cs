@@ -96,21 +96,6 @@ public class WalletService(
         return updatedWallet.Map();
     }
 
-    public async Task DeleteAsync(WalletDto walletDto)
-    {
-        var wallet = await walletRepository.GetByIdAsync(walletDto.Id);
-        if (wallet is null)
-        {
-            logger.LogWarning("Cannot delete: wallet {WalletId} not found", walletDto.Id);
-            throw new Exception($"Wallet {walletDto.Id} not found.");
-        }
-
-        await walletRepository.DeleteAsync(wallet);
-        await InvalidateWalletCacheAsync(wallet);
-
-        logger.LogInformation("Wallet {WalletId} deleted", wallet.Id);
-    }
-
     private async Task CacheWalletAsync(WalletDto walletDto)
     {
         var expiration = TimeSpan.FromMinutes(5);

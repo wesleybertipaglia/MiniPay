@@ -35,7 +35,7 @@ try
     {
         options.SwaggerDoc("v1", new OpenApiInfo
         {
-            Title = "MiniBank.Verification.Api",
+            Title = "MiniPay.Verification.Api",
             Version = "v1"
         });
 

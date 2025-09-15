@@ -1,12 +1,11 @@
 using Shared.Core.Enum;
 
-namespace Shared.Core.Dto;
+namespace Transaction.Core.Dto;
 
-public record TransactionDto
+public record TransactionSummaryDto
 (
     string Code,
-    Guid UserId,
-    string Description,
+    string? TargetWalletCode,
     decimal Amount,
     TransactionType Type,
     TransactionStatus Status

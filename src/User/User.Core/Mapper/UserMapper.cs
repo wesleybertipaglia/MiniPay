@@ -8,11 +8,11 @@ public static class UserMapper
     {
         return new UserDto
         (
-            user.Id,
-            user.Code,
-            user.Name,
-            user.Email,
-            user.EmailConfirmed
+            Id: user.Id,
+            Code: user.Code,
+            Name: user.Name,
+            Email: user.Email,
+            EmailConfirmed: user.EmailConfirmed
         );
     }
     
@@ -20,10 +20,10 @@ public static class UserMapper
     {
         return new Model.User
         (
-            userDto.Id,
-            userDto.Code,
-            userDto.Name,
-            userDto.Email
+            id: userDto.Id,
+            code: userDto.Code,
+            name: userDto.Name,
+            email: userDto.Email
         );
     }
 }

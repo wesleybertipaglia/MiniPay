@@ -6,6 +6,5 @@ public enum TransactionType
     WITHDRAW,
     TRANSFER,
     PAYMENT,
-    RECEIPT,
     REFUND
 }

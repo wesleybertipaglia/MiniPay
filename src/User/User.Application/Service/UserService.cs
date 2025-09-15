@@ -82,23 +82,23 @@ public class UserService(
     {
         var expiration = TimeSpan.FromMinutes(5);
 
-        await cacheService.SetAsync(CacheKeys.GetUserByIdKey(userDto.Id), userDto, expiration);
-        await cacheService.SetAsync(CacheKeys.GetUserByCodeKey(userDto.Code), userDto, expiration);
-        await cacheService.SetAsync(CacheKeys.GetUserByEmailKey(userDto.Email), userDto, expiration);
+        await cacheService.SetAsync(UserCacheKeys.GetUserByIdKey(userDto.Id), userDto, expiration);
+        await cacheService.SetAsync(UserCacheKeys.GetUserByCodeKey(userDto.Code), userDto, expiration);
+        await cacheService.SetAsync(UserCacheKeys.GetUserByEmailKey(userDto.Email), userDto, expiration);
 
         logger.LogDebug("Cached user {UserId} with expiration {Expiration}", userDto.Id, expiration);
     }
 
     private async Task<UserDto?> GetUserCacheByIdAsync(Guid id)
     {
-        var keyById = CacheKeys.GetUserByIdKey(id);
+        var keyById = UserCacheKeys.GetUserByIdKey(id);
         return await cacheService.GetAsync<UserDto>(keyById);
     }
 
     private async Task InvalidateUserCacheAsync(Core.Model.User user)
     {
-        await cacheService.RemoveAsync(CacheKeys.GetUserByIdKey(user.Id));
-        await cacheService.RemoveAsync(CacheKeys.GetUserByEmailKey(user.Email));
+        await cacheService.RemoveAsync(UserCacheKeys.GetUserByIdKey(user.Id));
+        await cacheService.RemoveAsync(UserCacheKeys.GetUserByEmailKey(user.Email));
 
         logger.LogDebug("Invalidated cache for user {UserId}", user.Id);
     }

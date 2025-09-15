@@ -7,6 +7,6 @@
 - [x] User service
 - [x] Verification service
 - [x] Notification service
-- [ ] Wallet service
+- [x] Wallet service
 - [ ] Transaction service
 - [ ] API Gateway

@@ -1,6 +1,6 @@
 namespace User.Core.Helper;
 
-public static class CacheKeys
+public static class UserCacheKeys
 {
     public static string GetUserByIdKey(Guid id) => $"user:id:{id}";
     public static string GetUserByCodeKey(string code) => $"user:code:{code}";

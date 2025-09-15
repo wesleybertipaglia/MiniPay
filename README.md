@@ -73,8 +73,11 @@ Event: email-confirmed          → `verification service` emits event
 ### Transaction Flow
 
 ```text
-Event: transaction-created       → `transaction service` emits event
-  → queue: update-wallet         → wallet service
+Event: transaction-created                → `transaction service` emits event
+  → queue: update-wallet                  → `wallet service` tries to update balance and emit event
+    → event: wallet-updated               → `wallet service` emits event if balance updated
+      → queue: transaction-processed      → `transaction service` updates transaction status with success/failed
+      → queue: transaction-notification   → `notification service` sends transaction notification with its status
 ```
 
 * After a transaction is created, an event is emitted.

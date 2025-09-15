@@ -1,0 +1,46 @@
+using Shared.Core.Enum;
+using Shared.Core.Model;
+using Wallet.Core.Enum;
+
+namespace Wallet.Core.Model;
+
+public class Wallet : BaseModel
+{
+    public Guid UserId { get; private set; }
+    public decimal Balance { get; private set; }
+    public Currency Currency { get; private set; } = Currency.USD;
+    public Country Country { get; private set; } = Country.US;
+    public WalletType Type { get; private set; } = WalletType.Personal;
+
+    public Wallet() { }
+
+    public Wallet(Guid userId, decimal balance, Currency currency, Country country, WalletType type)
+    {
+        UserId = userId;
+        Balance = balance;
+        Currency = currency;
+        Country = country;
+        Type = type;
+    }
+
+    public void Deposit(decimal amount)
+    {
+        if (amount <= 0) 
+            throw new InvalidOperationException("Amount must be greater than zero.");
+        
+        Balance += amount;
+    }
+
+    public void Withdraw(decimal amount)
+    {
+        if (!HasSufficientBalance(amount))
+            throw new InvalidOperationException("Insufficient balance.");
+        
+        Balance -= amount;
+    }
+
+    private bool HasSufficientBalance(decimal amount)
+    {
+        return Balance >= amount;
+    }
+}

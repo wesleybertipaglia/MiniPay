@@ -7,7 +7,7 @@ public record TransactionDetailsDto
     Guid Id,
     string Code,
     Guid UserId,
-    Guid? OriginalTransactionId,
+    string? TargetTransactionCode,
     string? TargetWalletCode,
     string Description,
     decimal Amount,

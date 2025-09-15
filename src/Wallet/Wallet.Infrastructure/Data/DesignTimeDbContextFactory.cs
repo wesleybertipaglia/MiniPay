@@ -7,7 +7,7 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<AppDbConte
 {
     public AppDbContext CreateDbContext(string[] args)
     {
-        const string connectionString = "Host=localhost;Port=5430;Username=admin;Password=admin;Database=minipay_db_data_wallet";
+        const string connectionString = "Host=localhost;Port=5430;Username=admin;Password=admin;Database=minipay_db_wallet";
         
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
         optionsBuilder.UseNpgsql(connectionString);

@@ -1,7 +1,9 @@
+using Microsoft.EntityFrameworkCore;
 using Shared.Core.Model;
 
 namespace User.Core.Model;
 
+[Index(nameof(Code), IsUnique = true)]
 public class User : BaseModel
 {
     public string Name { get; set; }

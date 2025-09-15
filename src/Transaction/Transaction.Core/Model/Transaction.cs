@@ -1,12 +1,14 @@
+using Microsoft.EntityFrameworkCore;
 using Shared.Core.Enum;
 using Shared.Core.Model;
 
 namespace Transaction.Core.Model;
 
+[Index(nameof(Code), IsUnique = true)]
 public class Transaction : BaseModel
 {
     public Guid UserId { get; private set; }
-    public Guid? OriginalTransactionId { get; private set; }
+    public string? TargetTransactionCode { get; private set; }
     public string? TargetWalletCode { get; private set; }
     public string Description { get; private set; }
     public decimal Amount { get; private set; }
@@ -21,14 +23,14 @@ public class Transaction : BaseModel
         decimal amount,
         TransactionType type,
         string? targetWalletCode = null,
-        Guid? originalTransactionId = null)
+        string? targetTransactionCode = null)
     {
         UserId = userId;
         Description = description;
         Amount = amount;
         Type = type;
         TargetWalletCode = targetWalletCode;
-        OriginalTransactionId = originalTransactionId;
+        TargetTransactionCode = targetTransactionCode;
         Status = TransactionStatus.PENDING;
 
         Validate();
@@ -40,7 +42,7 @@ public class Transaction : BaseModel
             throw new ArgumentException("Amount must be greater than zero.");
 
         ValidateTargetWalletCode();
-        ValidateOriginalTransactionId();
+        ValidateTargetTransactionCode();
     }
 
     private void ValidateTargetWalletCode()
@@ -64,18 +66,18 @@ public class Transaction : BaseModel
         }
     }
 
-    private void ValidateOriginalTransactionId()
+    private void ValidateTargetTransactionCode()
     {
         switch (Type)
         {
             case TransactionType.REFUND:
-                if (!OriginalTransactionId.HasValue)
-                    throw new ArgumentException("OriginalTransactionId is required for refund transactions.");
+                if (string.IsNullOrEmpty(TargetTransactionCode))
+                    throw new ArgumentException("TargetTransactionCode is required for refund transactions.");
                 break;
 
             default:
-                if (OriginalTransactionId.HasValue)
-                    throw new ArgumentException($"OriginalTransactionId must be null for {Type.ToString().ToLower()} transactions.");
+                if (!string.IsNullOrEmpty(TargetTransactionCode))
+                    throw new ArgumentException($"TargetTransactionCode must be null for {Type.ToString().ToLower()} transactions.");
                 break;
         }
     }

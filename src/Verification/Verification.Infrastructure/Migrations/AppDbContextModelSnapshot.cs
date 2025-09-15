@@ -59,6 +59,9 @@ namespace Verification.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Code")
+                        .IsUnique();
+
                     b.ToTable("VerificationCodes");
                 });
 #pragma warning restore 612, 618

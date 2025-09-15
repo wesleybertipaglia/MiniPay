@@ -1,8 +1,10 @@
+using Microsoft.EntityFrameworkCore;
 using Shared.Core.Model;
 using Verification.Core.Enum;
 
 namespace Verification.Core.Model;
 
+[Index(nameof(Code), IsUnique = true)]
 public class VerificationCode : BaseModel
 {
     public Guid UserId { get; init; }

@@ -27,6 +27,12 @@ namespace Authentication.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_Users", x => x.Id);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Code",
+                table: "Users",
+                column: "Code",
+                unique: true);
         }
 
         /// <inheritdoc />

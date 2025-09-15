@@ -15,6 +15,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="Microsoft.EntityFrameworkCore.Abstractions">
+      <HintPath>..\..\..\..\..\..\.nuget\packages\microsoft.entityframeworkcore.abstractions\9.0.9\lib\net8.0\Microsoft.EntityFrameworkCore.Abstractions.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Extensions.Configuration.Abstractions">
       <HintPath>..\..\..\..\..\..\.nuget\packages\microsoft.extensions.configuration.abstractions\9.0.9\lib\net8.0\Microsoft.Extensions.Configuration.Abstractions.dll</HintPath>
     </Reference>

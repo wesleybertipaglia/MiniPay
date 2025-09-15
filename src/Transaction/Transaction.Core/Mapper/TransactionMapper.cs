@@ -10,7 +10,7 @@ public static class TransactionMapper
         return new Model.Transaction
         (
             userId: userId,
-            originalTransactionId: transactionRequestDto.OriginalTransactionId,
+            targetTransactionCode: transactionRequestDto.TargetTransactionCode,
             targetWalletCode: transactionRequestDto.TargetWalletCode,
             type:  transactionRequestDto.TransactionType,
             amount: transactionRequestDto.Amount,
@@ -25,7 +25,7 @@ public static class TransactionMapper
             Id: transaction.Id,
             Code: transaction.Code,
             UserId: transaction.UserId,
-            OriginalTransactionId: transaction.OriginalTransactionId,
+            TargetTransactionCode: transaction.TargetTransactionCode,
             TargetWalletCode: transaction.TargetWalletCode,
             Description: transaction.Description,
             Type: transaction.Type,

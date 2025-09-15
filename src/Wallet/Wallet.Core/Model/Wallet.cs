@@ -1,9 +1,11 @@
+using Microsoft.EntityFrameworkCore;
 using Shared.Core.Enum;
 using Shared.Core.Model;
 using Wallet.Core.Enum;
 
 namespace Wallet.Core.Model;
 
+[Index(nameof(Code), IsUnique = true)]
 public class Wallet : BaseModel
 {
     public Guid UserId { get; private set; }

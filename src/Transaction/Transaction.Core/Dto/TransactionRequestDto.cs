@@ -6,7 +6,7 @@ namespace Transaction.Core.Dto;
 public record TransactionRequestDto
 (
     string? TargetWalletCode,
-    Guid? OriginalTransactionId,
+    string? TargetTransactionCode,
     TransactionType TransactionType,
 
     [Required, MinLength(3)]

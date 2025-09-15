@@ -8,7 +8,7 @@ public class User : BaseModel
     
     public string Email { get; set; }
 
-    public bool EmailConfirmed { get; set; } = false;
+    public bool EmailConfirmed { get; set; }
 
     public User() { }
 

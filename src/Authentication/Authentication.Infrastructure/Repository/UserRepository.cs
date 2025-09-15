@@ -26,17 +26,4 @@ public class UserRepository(AppDbContext context) : IUserRepository
         await context.SaveChangesAsync();
         return user;
     }
-
-    public async Task<Core.Model.User> UpdateAsync(Core.Model.User user)
-    {
-        context.Users.Update(user);
-        await context.SaveChangesAsync();
-        return user;
-    }
-
-    public async Task DeleteAsync(Core.Model.User user)
-    {
-        context.Users.Remove(user);
-        await context.SaveChangesAsync();
-    }
 }

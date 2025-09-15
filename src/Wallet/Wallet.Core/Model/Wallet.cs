@@ -8,9 +8,9 @@ public class Wallet : BaseModel
 {
     public Guid UserId { get; private set; }
     public decimal Balance { get; private set; }
-    public Currency Currency { get; private set; } = Currency.USD;
-    public Country Country { get; private set; } = Country.US;
-    public WalletType Type { get; private set; } = WalletType.Personal;
+    public Currency Currency { get; set; } = Currency.USD;
+    public Country Country { get; set; } = Country.US;
+    public WalletType Type { get; set; } = WalletType.Personal;
 
     public Wallet() { }
 

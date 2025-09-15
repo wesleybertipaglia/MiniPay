@@ -1,4 +1,4 @@
-namespace Shared.Core.Extensions;
+namespace Shared.Core.Extension;
 
 public static class DateTimeExtensions
 {

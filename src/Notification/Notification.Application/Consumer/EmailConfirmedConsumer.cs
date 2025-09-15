@@ -23,27 +23,32 @@ public class EmailConfirmedConsumer(
             routingKey: "email.confirmed",
             onMessageReceived: async (message) =>
             {
+                using var scope = serviceProvider.CreateScope();
+
                 try
                 {
                     var userDto = JsonSerializer.Deserialize<UserDto>(message);
+
                     if (userDto is null)
                     {
-                        logger.LogError("Received null or invalid UserDto.");
+                        logger.LogWarning("Received null or invalid UserDto in email.confirmed message: {RawMessage}", message);
                         return;
                     }
 
-                    using var scope = serviceProvider.CreateScope();
                     var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
-
                     var emailRequest = EmailTemplate.BuildWelcomeEmail(userDto);
 
                     await emailService.SendEmailAsync(emailRequest);
 
-                    logger.LogInformation("Confirmation email sent to user {UserId} ({Email})", userDto.Id, userDto.Email);
+                    logger.LogInformation("Welcome email sent to user {UserId} ({Email})", userDto.Id, userDto.Email);
+                }
+                catch (JsonException jsonEx)
+                {
+                    logger.LogError(jsonEx, "Failed to deserialize message in email.confirmed: {Message}", message);
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "Failed to process email.confirmed event for notification");
+                    logger.LogError(ex, "Unhandled error while processing email.confirmed event for user");
                 }
             });
     }

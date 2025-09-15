@@ -5,7 +5,7 @@ namespace Notification.Core.Template;
 
 public class EmailTemplate
 {
-    public static EmailRequestDto BuildConfirmationEmail(UserDto userDto, string code)
+    public static EmailRequestDto BuildConfirmEmail(UserDto userDto, string code)
     {
         var subject = "MiniPay - Confirme seu E-mail";
 

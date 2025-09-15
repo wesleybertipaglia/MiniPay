@@ -10,7 +10,7 @@ using Verification.Core.Interface;
 namespace Verification.Application.Consumer;
 
 public class UserCreatedConsumer(
-    IServiceProvider serviceProvider, 
+    IServiceProvider serviceProvider,
     ILogger<UserCreatedConsumer> logger)
     : BackgroundService
 {
@@ -27,21 +27,27 @@ public class UserCreatedConsumer(
                 try
                 {
                     var userDto = JsonSerializer.Deserialize<UserDto>(message);
-                    if (userDto == null)
+
+                    if (userDto is null)
                     {
-                        logger.LogError("Invalid user DTO.");
+                        logger.LogWarning("Received invalid or null UserDto in user.created event.");
                         return;
                     }
-                    
+
                     using var scope = serviceProvider.CreateScope();
                     var verificationService = scope.ServiceProvider.GetRequiredService<IVerificationCodeService>();
+
                     await verificationService.CreateAsync(userDto.Id, VerificationCodeType.EMAIL_VERIFICATION);
 
-                    logger.LogInformation($"Verification code created for user {userDto.Id}");
+                    logger.LogInformation("Verification code generated for user {UserId}", userDto.Id);
+                }
+                catch (JsonException jsonEx)
+                {
+                    logger.LogError(jsonEx, "Failed to deserialize user.created message: {Message}", message);
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "Error processing message");
+                    logger.LogError(ex, "Error processing user.created event");
                 }
             });
     }

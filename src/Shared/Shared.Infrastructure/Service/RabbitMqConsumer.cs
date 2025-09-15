@@ -2,7 +2,6 @@ using System.Text;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using Shared.Core.Helpers;
 using Shared.Core.Interface;
 
 namespace Shared.Infrastructure.Service;
@@ -19,34 +18,55 @@ public class RabbitMqConsumer(ILogger<RabbitMqConsumer> logger) : IMessageConsum
         string routingKey,
         Func<string, Task> onMessageReceived)
     {
-        var factory = new ConnectionFactory { HostName = HostName };
-        _connection ??= await factory.CreateConnectionAsync();
-        _channel ??= await _connection.CreateChannelAsync();
+        logger.LogInformation("Initializing consumer for exchange '{Exchange}', queue '{Queue}', routingKey '{RoutingKey}'",
+            exchange, queue, routingKey);
 
-        await _channel.ExchangeDeclareAsync(exchange, ExchangeType.Topic, durable: true);
-        
-        await _channel.QueueDeclareAsync(queue, durable: true, exclusive: false, autoDelete: false);
-        
-        await _channel.QueueBindAsync(queue: queue, exchange: exchange, routingKey: routingKey);
-
-        var consumer = new AsyncEventingBasicConsumer(_channel);
-        consumer.ReceivedAsync += async (_, ea) =>
+        try
         {
-            var message = Encoding.UTF8.GetString(ea.Body.ToArray());
+            var factory = new ConnectionFactory { HostName = HostName };
+            _connection ??= await factory.CreateConnectionAsync();
+            _channel ??= await _connection.CreateChannelAsync();
 
-            try
-            {
-                await onMessageReceived(message);
-                await _channel.BasicAckAsync(ea.DeliveryTag, multiple: false);
-            }
-            catch (Exception ex)
-            {
-                LogHelper.LogError(logger, "Error processing message");
-                await _channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: true);
-            }
-        };
+            await _channel.ExchangeDeclareAsync(exchange, ExchangeType.Topic, durable: true);
+            await _channel.QueueDeclareAsync(queue, durable: true, exclusive: false, autoDelete: false);
+            await _channel.QueueBindAsync(queue: queue, exchange: exchange, routingKey: routingKey);
 
-        await _channel.BasicConsumeAsync(queue: queue, autoAck: false, consumer: consumer);
-        LogHelper.LogInfo(logger, "Subscribed to exchange '{Exchange}' with queue '{Queue}' and routingKey '{RoutingKey}'", [exchange, queue, routingKey]);
+            var consumer = new AsyncEventingBasicConsumer(_channel);
+
+            consumer.ReceivedAsync += async (_, ea) =>
+            {
+                var message = Encoding.UTF8.GetString(ea.Body.ToArray());
+
+                logger.LogInformation("Message received from queue '{Queue}' with delivery tag {DeliveryTag}. Message: {Message}",
+                    queue, ea.DeliveryTag, message);
+
+                try
+                {
+                    await onMessageReceived(message);
+                    await _channel.BasicAckAsync(ea.DeliveryTag, multiple: false);
+
+                    logger.LogInformation("Message acknowledged (DeliveryTag: {DeliveryTag})", ea.DeliveryTag);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex,
+                        "Error processing message from queue '{Queue}' (DeliveryTag: {DeliveryTag}). Requeuing message.",
+                        queue, ea.DeliveryTag);
+
+                    await _channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: true);
+                }
+            };
+
+            await _channel.BasicConsumeAsync(queue: queue, autoAck: false, consumer: consumer);
+
+            logger.LogInformation("Successfully subscribed to queue '{Queue}' on exchange '{Exchange}' with routing key '{RoutingKey}'",
+                queue, exchange, routingKey);
+        }
+        catch (Exception ex)
+        {
+            logger.LogCritical(ex, "Failed to initialize RabbitMQ consumer for exchange '{Exchange}', queue '{Queue}', routingKey '{RoutingKey}'",
+                exchange, queue, routingKey);
+            throw;
+        }
     }
 }

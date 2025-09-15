@@ -8,6 +8,7 @@ using Shared.Infrastructure.Service;
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
     .Enrich.FromLogContext()
+    .Enrich.WithProperty("Application", "MiniPay.Notification.Service")
     .WriteTo.Console()
     .WriteTo.File(
         path: $"logs/{DateTime.Now:yyyyMMdd-HHmmss}.log",

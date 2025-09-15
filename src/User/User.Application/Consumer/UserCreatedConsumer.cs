@@ -16,10 +16,17 @@ public class UserCreatedConsumer(
     {
         var messageConsumer = serviceProvider.GetRequiredService<IMessageConsumer>();
 
+        const string exchange = "user-exchange";
+        const string queue = "new-user";
+        const string routingKey = "user.created";
+
+        logger.LogInformation("Starting consumer for queue '{Queue}' on exchange '{Exchange}' with routing key '{RoutingKey}'",
+            queue, exchange, routingKey);
+
         await messageConsumer.ConsumeAsync(
-            exchange: "user-exchange",
-            queue: "new-user",
-            routingKey: "user.created",
+            exchange: exchange,
+            queue: queue,
+            routingKey: routingKey,
             onMessageReceived: async (message) =>
             {
                 try
@@ -27,19 +34,24 @@ public class UserCreatedConsumer(
                     var userDto = JsonSerializer.Deserialize<UserDto>(message);
                     if (userDto is null)
                     {
-                        logger.LogError("Received null or invalid UserDto.");
+                        logger.LogWarning("Received invalid or null UserDto from message: {Message}", message);
                         return;
                     }
-                    
+
                     using var scope = serviceProvider.CreateScope();
                     var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
 
                     await userService.CreateAsync(userDto);
-                    logger.LogInformation("Processed user.created event for user {UserId}", userDto.Id);
+
+                    logger.LogInformation("Successfully processed 'user.created' event for user ID {UserId}", userDto.Id);
+                }
+                catch (JsonException ex)
+                {
+                    logger.LogError(ex, "Failed to deserialize UserDto from message: {Message}", message);
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "Failed to process user.created event");
+                    logger.LogError(ex, "Failed to process 'user.created' event");
                 }
             });
     }

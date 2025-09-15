@@ -3,7 +3,6 @@ using Authentication.Core.Dto;
 using Authentication.Core.Interface;
 using Authentication.Core.Mapper;
 using Microsoft.Extensions.Logging;
-using Shared.Core.Helpers;
 using Shared.Core.Interface;
 
 namespace Authentication.Application.Service;
@@ -17,20 +16,22 @@ public class AuthService(
 {
     public async Task<TokenDto> SignIn(SignInRequestDto signInRequestDto)
     {
+        logger.LogDebug("Attempting to sign in user with email: {Email}", signInRequestDto.Email);
+
         var user = await userRepository.GetByEmailAsync(signInRequestDto.Email);
         if (user == null)
         {
-            var message = $"User with email '{signInRequestDto.Email}' not found.";
-            LogHelper.LogError(logger, message);
-            throw new Exception(message);
+            logger.LogWarning("Sign-in failed: user not found with email {Email}", signInRequestDto.Email);
+            throw new Exception($"User with email '{signInRequestDto.Email}' not found.");
         }
 
         if (!user.ValidatePassword(signInRequestDto.Password))
         {
-            var message = "Invalid credentials.";
-            LogHelper.LogError(logger, message);
-            throw new Exception(message);
+            logger.LogWarning("Sign-in failed: invalid password for email {Email}", signInRequestDto.Email);
+            throw new Exception("Invalid credentials.");
         }
+
+        logger.LogInformation("User signed in successfully: {Email}", signInRequestDto.Email);
 
         var token = tokenService.GenerateJwtToken(user);
         return TokenMapper.Map(token);
@@ -38,26 +39,30 @@ public class AuthService(
 
     public async Task<TokenDto> SignUp(SignUpRequestDto signUpRequestDto)
     {
+        logger.LogDebug("Attempting to sign up user with email: {Email}", signUpRequestDto.Email);
+
         var existingUser = await userRepository.GetByEmailAsync(signUpRequestDto.Email);
         if (existingUser != null)
         {
-            var message = $"User with email '{signUpRequestDto.Email}' already exists.";
-            LogHelper.LogError(logger, message);
-            throw new Exception(message);
+            logger.LogWarning("Sign-up failed: user already exists with email {Email}", signUpRequestDto.Email);
+            throw new Exception($"User with email '{signUpRequestDto.Email}' already exists.");
         }
 
         var newUser = signUpRequestDto.Map();
-
         var createdUser = await userRepository.CreateAsync(newUser);
-        LogHelper.LogInfo(logger, $"User created successfully with email {signUpRequestDto.Email}");
-        
+
+        logger.LogInformation("User created successfully: {Email}", signUpRequestDto.Email);
+
         var userDto = createdUser.Map();
         var messageJson = JsonSerializer.Serialize(userDto);
-        
+
         await messagePublisher.PublishAsync(
             exchange: "user-exchange",
             routingKey: "user.created",
-            message: messageJson);
+            message: messageJson
+        );
+
+        logger.LogInformation("Published 'user.created' event for user {UserId}", userDto.Id);
 
         var token = tokenService.GenerateJwtToken(createdUser);
         return TokenMapper.Map(token);

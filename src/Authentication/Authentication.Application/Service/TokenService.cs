@@ -12,27 +12,33 @@ public class TokenService(IConfiguration configuration) : ITokenService
 {
     public string GenerateJwtToken(User user)
     {
+        var secretKey = configuration["Jwt:SecretKey"]
+                        ?? throw new InvalidOperationException("JWT SecretKey is not configured.");
+        
+        var issuer = configuration["Jwt:Issuer"]
+                     ?? throw new InvalidOperationException("JWT Issuer is not configured.");
+
+        var audience = configuration["Jwt:Audience"]
+                       ?? throw new InvalidOperationException("JWT Audience is not configured.");
+        
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.Name),
             new Claim(ClaimTypes.Email, user.Email)
         };
-
-        var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(configuration["Jwt:SecretKey"])
-        );
-
+        
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
+        
         var token = new JwtSecurityToken(
-            issuer: configuration["Jwt:Issuer"],
-            audience: configuration["Jwt:Audience"],
+            issuer: issuer,
+            audience: audience,
             claims: claims,
             expires: DateTime.UtcNow.AddHours(1),
             signingCredentials: credentials
         );
-
+        
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }

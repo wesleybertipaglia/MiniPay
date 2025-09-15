@@ -45,14 +45,14 @@ The system consists of the following microservices:
 ### User Created Flow
 
 ```text
-Event: user created
-  → queue: new user              → `user service` creates profile
-  → queue: new user              → `wallet service` creates wallet
-  → queue: new user              → `verification service` generates verification code
-      → queue: new notification  → `notification service` sends verification email
-````
+Event: user-created                 → `auth service` emits event                          [x]
+  → queue: new-user                 → `user service` creates profile                      [x]
+  → queue: new-wallet               → `wallet service` creates wallet                     [ ]
+  → queue: new-email-verification   → `verification service` generates verification code  [x]
+    → queue: new-user-notification  → `notification service` sends verification email     [x]
+```
 
-* The `user created` event is published after signup.
+* The `user-created` event is published after signup.
 * Each consumer handles part of the process:
 
   * `user service`: stores user profile (excluding password)
@@ -60,11 +60,21 @@ Event: user created
   * `verification service`: generates verification code
   * `notification service`: sends verification email
 
+### Email Confirmation Flow
+
+```text
+Event: email-confirmed          → `verification service` emits event
+  → queue: email-confirmed      → `user service` updates user profile
+```
+
+* The `email-confirmed` event is published after the user confirms their email.
+* The `user service` consumes the event to update the user's profile as confirmed.
+
 ### Transaction Flow
 
 ```text
-Event: transaction created
-  → queue: update wallet         → wallet service
+Event: transaction-created       → `transaction service` emits event
+  → queue: update-wallet         → wallet service
 ```
 
 * After a transaction is created, an event is emitted.

@@ -29,7 +29,6 @@
     <ProjectReference Include="..\Notification.Core\Notification.Core.csproj" />
     <ProjectReference Include="..\Notification.Application\Notification.Application.csproj" />
     <ProjectReference Include="..\Notification.Infrastructure\Notification.Infrastructure.csproj" />
-    <ProjectReference Include="..\Notification.Api\Notification.Api.csproj" />
   </ItemGroup>
 
 </Project>

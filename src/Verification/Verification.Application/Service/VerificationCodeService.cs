@@ -1,4 +1,6 @@
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Shared.Core.Dto;
 using Shared.Core.Extensions;
 using Shared.Core.Helpers;
 using Shared.Core.Interface;
@@ -14,7 +16,8 @@ namespace Verification.Application.Service;
 public class VerificationCodeService(
     IVerificationCodeRepository repository,
     ICacheService cacheService,
-    ILogger<VerificationCodeService> logger
+    ILogger<VerificationCodeService> logger,
+    IMessagePublisher messagePublisher
 ) : IVerificationCodeService
 {
     public async Task<VerificationCodeDto> CreateAsync(Guid userId, VerificationCodeType type)
@@ -26,7 +29,7 @@ public class VerificationCodeService(
         {
             return cachedCode;
         }
-        
+
         var existing = await repository.GetLatestValidCodeByUserIdAndTypeAsync(userId, type);
 
         if (existing != null && existing.IsValid())
@@ -38,6 +41,17 @@ public class VerificationCodeService(
         var created = await repository.CreateAsync(entity);
 
         await cacheService.SetAsync(codeCacheKey, created.Map(), created.ExpiresAt.ToExpirationTimeSpan());
+        
+        var userCacheKey = CacheKeysHelper.GetUserIdKey(userId);
+        var cachedUser = await cacheService.GetAsync<UserDto>(userCacheKey);
+        var emailVerificationEventDto = new EmailVerificationEventDto(cachedUser, created.Content);
+        var messageJson = JsonSerializer.Serialize(emailVerificationEventDto);
+        
+        await messagePublisher.PublishAsync(
+            exchange: "user-exchange",
+            routingKey: "email.verification",
+            message: messageJson
+        );
 
         LogHelper.LogInfo(logger, $"Generated new verification code for user {userId} of type {type}");
 
@@ -67,5 +81,17 @@ public class VerificationCodeService(
         await cacheService.RemoveAsync(codeCacheKey);
 
         LogHelper.LogInfo(logger, $"Marked verification code as used for user {userId}");
+
+        var userCacheKey = CacheKeysHelper.GetUserIdKey(userId);
+        var cachedUser = await cacheService.GetAsync<UserDto>(userCacheKey);
+        var messageJson = JsonSerializer.Serialize(cachedUser);
+
+        await messagePublisher.PublishAsync(
+            exchange: "user-exchange",
+            routingKey: "email.confirmed",
+            message: messageJson
+        );
+
+        LogHelper.LogInfo(logger, $"Published 'email.confirmed' event for user {userId}");
     }
 }

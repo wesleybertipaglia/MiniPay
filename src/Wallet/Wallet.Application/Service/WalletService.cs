@@ -13,62 +13,32 @@ public class WalletService(
     ICacheService cacheService)
     : IWalletService
 {
-    public async Task<WalletDto?> GetByIdAsync(Guid id)
+    public async Task<WalletDto?> GetByUserIdAsync(Guid userId)
     {
-        var cachedWallet = await GetWalletCacheByIdAsync(id);
+        var cachedWallet = await GetWalletCacheByUserIdAsync(userId);
         if (cachedWallet != null)
         {
-            logger.LogInformation("Retrieved wallet {WalletId} from cache", id);
+            logger.LogInformation("Retrieved wallet of user {UserId} from cache", userId);
             return cachedWallet;
         }
 
-        var wallet = await walletRepository.GetByIdAsync(id);
+        var wallet = await walletRepository.GetByUserIdAsync(userId);
         if (wallet is null)
         {
-            logger.LogWarning("Wallet not found with ID: {WalletId}", id);
+            logger.LogWarning("Wallet not found with UserId: {UserId}", userId);
             return null;
         }
 
         var mappedWallet = wallet.Map();
         await CacheWalletAsync(mappedWallet);
 
-        logger.LogInformation("Wallet {WalletId} fetched from DB and cached", id);
+        logger.LogInformation("Wallet {WalletId} fetched from DB and cached", wallet.Id);
         return mappedWallet;
     }
 
-    public async Task<WalletDto?> GetByCodeAsync(string code)
+    public async Task<WalletDto> CreateAsync(Guid userId)
     {
-        var cachedWallet = await GetWalletCacheByCodeAsync(code);
-        if (cachedWallet != null)
-        {
-            logger.LogInformation("Retrieved wallet {WalletCode} from cache", code);
-            return cachedWallet;
-        }
-
-        var wallet = await walletRepository.GetByCodeAsync(code);
-        if (wallet is null)
-        {
-            logger.LogWarning("Wallet not found with code: {WalletCode}", code);
-            return null;
-        }
-
-        var mappedWallet = wallet.Map();
-        await CacheWalletAsync(mappedWallet);
-
-        logger.LogInformation("Wallet {WalletCode} fetched from DB and cached", code);
-        return mappedWallet;
-    }
-
-    public async Task<WalletDto> CreateAsync(WalletDto walletDto)
-    {
-        var existing = await walletRepository.GetByIdAsync(walletDto.Id);
-        if (existing != null)
-        {
-            logger.LogWarning("Cannot create wallet: wallet {WalletId} already exists", walletDto.Id);
-            throw new Exception($"Wallet {walletDto.Id} already exists.");
-        }
-
-        var wallet = walletDto.Map();
+        var wallet = new Core.Model.Wallet(userId);
         await walletRepository.CreateAsync(wallet);
         await InvalidateWalletCacheAsync(wallet);
 
@@ -76,18 +46,28 @@ public class WalletService(
         return wallet.Map();
     }
 
-    public async Task<WalletDto> UpdateAsync(Guid id, WalletUpdateRequestDto walletDto)
+    public async Task<WalletDto> CreateAsync(WalletCreateRequestDto requestDto, Guid userId)
     {
-        var wallet = await walletRepository.GetByIdAsync(id);
+        var wallet = requestDto.Map(userId);
+        await walletRepository.CreateAsync(wallet);
+        await InvalidateWalletCacheAsync(wallet);
+
+        logger.LogInformation("Wallet {WalletId} created", wallet.Id);
+        return wallet.Map();
+    }
+
+    public async Task<WalletDto> UpdateAsync(WalletUpdateRequestDto requestDto, Guid userId)
+    {
+        var wallet = await walletRepository.GetByUserIdAsync(userId);
         if (wallet is null)
         {
-            logger.LogWarning("Cannot update: wallet {WalletId} not found", id);
-            throw new Exception($"Wallet {id} not found.");
+            logger.LogWarning("Cannot update: wallet of user {UserId} not found", userId);
+            throw new Exception($"Wallet of user {userId} not found.");
         }
 
-        if (walletDto.Country != null) wallet.Country = walletDto.Country.GetValueOrDefault();
-        if (walletDto.Currency != null) wallet.Currency = walletDto.Currency.GetValueOrDefault();
-        if (walletDto.Type != null) wallet.Type = walletDto.Type.GetValueOrDefault();
+        wallet.Country = requestDto.Country ?? wallet.Country;
+        wallet.Currency = requestDto.Currency ?? wallet.Currency;
+        wallet.Type = requestDto.Type ?? wallet.Type;
 
         var updatedWallet = await walletRepository.UpdateAsync(wallet);
         await InvalidateWalletCacheAsync(updatedWallet);
@@ -99,28 +79,20 @@ public class WalletService(
     private async Task CacheWalletAsync(WalletDto walletDto)
     {
         var expiration = TimeSpan.FromMinutes(5);
-        await cacheService.SetAsync(CacheKeys.GetWalletByIdKey(walletDto.Id), walletDto, expiration);
-        await cacheService.SetAsync(CacheKeys.GetWalletByCodeKey(walletDto.Code), walletDto, expiration);
+        await cacheService.SetAsync(WalletCacheKeys.GetWalletByUserIdKey(walletDto.UserId), walletDto, expiration);
 
         logger.LogDebug("Wallet {WalletId} cached with expiration {Expiration}", walletDto.Id, expiration);
     }
 
-    private async Task<WalletDto?> GetWalletCacheByIdAsync(Guid id)
+    private async Task<WalletDto?> GetWalletCacheByUserIdAsync(Guid userId)
     {
-        var key = CacheKeys.GetWalletByIdKey(id);
-        return await cacheService.GetAsync<WalletDto>(key);
-    }
-
-    private async Task<WalletDto?> GetWalletCacheByCodeAsync(string code)
-    {
-        var key = CacheKeys.GetWalletByCodeKey(code);
+        var key = WalletCacheKeys.GetWalletByUserIdKey(userId);
         return await cacheService.GetAsync<WalletDto>(key);
     }
 
     private async Task InvalidateWalletCacheAsync(Core.Model.Wallet wallet)
     {
-        await cacheService.RemoveAsync(CacheKeys.GetWalletByIdKey(wallet.Id));
-        await cacheService.RemoveAsync(CacheKeys.GetWalletByCodeKey(wallet.Code));
+        await cacheService.RemoveAsync(WalletCacheKeys.GetWalletByUserIdKey(wallet.UserId));
 
         logger.LogDebug("Cache invalidated for wallet {WalletId} and code {WalletCode}", wallet.Id, wallet.Code);
     }

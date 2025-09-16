@@ -6,20 +6,13 @@ namespace Wallet.Infrastructure.Repository;
 
 public class WalletRepository(AppDbContext context) : IWalletRepository
 {
-    public async Task<Core.Model.Wallet?> GetByIdAsync(Guid id)
+    public async Task<Core.Model.Wallet?> GetByUserIdAsync(Guid userId)
     {
         return await context.Wallets
             .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Id == id);
+            .FirstOrDefaultAsync(u => u.UserId == userId);
     }
-
-    public async Task<Core.Model.Wallet?> GetByCodeAsync(string code)
-    {
-        return await context.Wallets
-            .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Code == code);
-    }
-
+    
     public async Task<Core.Model.Wallet> CreateAsync(Core.Model.Wallet wallet)
     {
         await context.Wallets.AddAsync(wallet);
@@ -32,11 +25,5 @@ public class WalletRepository(AppDbContext context) : IWalletRepository
         context.Wallets.Update(wallet);
         await context.SaveChangesAsync();
         return wallet;
-    }
-
-    public async Task DeleteAsync(Core.Model.Wallet wallet)
-    {
-        context.Wallets.Remove(wallet);
-        await context.SaveChangesAsync();
     }
 }

@@ -15,11 +15,15 @@ public class Wallet : BaseModel
     public WalletType Type { get; set; } = WalletType.Personal;
 
     public Wallet() { }
-
-    public Wallet(Guid userId, decimal balance, Currency currency, Country country, WalletType type)
+    
+    public Wallet(Guid userId)
     {
         UserId = userId;
-        Balance = balance;
+    }
+
+    public Wallet(Guid userId, Currency currency, Country country, WalletType type)
+    {
+        UserId = userId;
         Currency = currency;
         Country = country;
         Type = type;

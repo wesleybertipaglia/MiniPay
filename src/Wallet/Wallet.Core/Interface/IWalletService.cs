@@ -4,8 +4,8 @@ namespace Wallet.Core.Interface;
 
 public interface IWalletService
 {
-    Task<WalletDto?> GetByIdAsync(Guid id);
-    Task<WalletDto?> GetByCodeAsync(string code);
-    Task<WalletDto> CreateAsync(WalletDto walletDto);
-    Task<WalletDto> UpdateAsync(Guid id, WalletUpdateRequestDto walletDto);
+    Task<WalletDto?> GetByUserIdAsync(Guid id);
+    Task<WalletDto> CreateAsync(Guid userId);
+    Task<WalletDto> CreateAsync(WalletCreateRequestDto requestDto, Guid userId);
+    Task<WalletDto> UpdateAsync(WalletUpdateRequestDto requestDto, Guid userId);
 }

@@ -18,15 +18,14 @@ public static class WalletMapper
         );
     }
     
-    public static Model.Wallet Map(this WalletDto walletDto)
+    public static Model.Wallet Map(this WalletCreateRequestDto createRequestDto, Guid userId)
     {
         return new Model.Wallet
         (
-            userId:  walletDto.UserId,
-            balance: walletDto.Balance,
-            country:  walletDto.Country,
-            currency:  walletDto.Currency,
-            type:  walletDto.Type
+            userId:  userId,
+            country:  createRequestDto.Country,
+            currency:  createRequestDto.Currency,
+            type:  createRequestDto.Type
         );
     }
 }

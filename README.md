@@ -45,11 +45,11 @@ The system consists of the following microservices:
 ### User Created Flow
 
 ```text
-Event: user-created                 → `auth service` emits event                          [x]
-  → queue: new-user                 → `user service` creates profile                      [x]
-  → queue: new-wallet               → `wallet service` creates wallet                     [ ]
-  → queue: new-email-verification   → `verification service` generates verification code  [x]
-    → queue: new-user-notification  → `notification service` sends verification email     [x]
+Event: user-created                 → `auth service` emits event
+  → queue: new-user                 → `user service` creates profile
+  → queue: new-wallet               → `wallet service` creates wallet
+  → queue: new-email-verification   → `verification service` generates verification code
+    → queue: new-user-notification  → `notification service` sends verification email
 ```
 
 * The `user-created` event is published after signup.

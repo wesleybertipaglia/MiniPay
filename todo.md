@@ -8,5 +8,5 @@
 - [x] Verification service
 - [x] Notification service
 - [x] Wallet service
-- [ ] Transaction service
+- [x] Transaction service
 - [ ] API Gateway

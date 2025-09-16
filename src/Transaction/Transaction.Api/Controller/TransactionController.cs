@@ -12,24 +12,6 @@ namespace Transaction.Api.Controller;
 [Authorize]
 public class TransactionController(ITransactionService transactionService) : ControllerBase
 {
-    [HttpPost]
-    public async Task<IActionResult> Create([FromBody] TransactionRequestDto request)
-    {
-        var userId = GetUserIdFromClaims();
-        if (userId == Guid.Empty)
-            return Unauthorized();
-
-        try
-        {
-            var transaction = await transactionService.CreateAsync(request, userId);
-            return CreatedAtAction(nameof(GetById), new { id = transaction.Id }, transaction);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-    }
-
     [HttpGet]
     public async Task<IActionResult> List(
         [FromQuery] int page = 1,
@@ -44,9 +26,7 @@ public class TransactionController(ITransactionService transactionService) : Con
 
         try
         {
-            var walletId = userId;
-
-            var transactions = await transactionService.ListAsync(walletId, page, size, type, startDate, endDate);
+            var transactions = await transactionService.ListAsync(userId, page, size, type, startDate, endDate);
             return Ok(transactions);
         }
         catch (Exception ex)
@@ -54,9 +34,9 @@ public class TransactionController(ITransactionService transactionService) : Con
             return BadRequest(new { message = ex.Message });
         }
     }
-
-    [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetById(Guid id)
+    
+    [HttpGet("{code}")]
+    public async Task<IActionResult> GetByCode(string code)
     {
         var userId = GetUserIdFromClaims();
         if (userId == Guid.Empty)
@@ -64,12 +44,30 @@ public class TransactionController(ITransactionService transactionService) : Con
 
         try
         {
-            var transaction = await transactionService.GetByIdAsync(id);
+            var transaction = await transactionService.GetByCodeAsync(code);
             return Ok(transaction);
         }
         catch (Exception ex)
         {
             return NotFound(new { message = ex.Message });
+        }
+    }
+    
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] TransactionRequestDto request)
+    {
+        var userId = GetUserIdFromClaims();
+        if (userId == Guid.Empty)
+            return Unauthorized();
+
+        try
+        {
+            var transaction = await transactionService.CreateAsync(request, userId);
+            return CreatedAtAction(nameof(GetByCode), new { code = transaction.Code }, transaction);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 

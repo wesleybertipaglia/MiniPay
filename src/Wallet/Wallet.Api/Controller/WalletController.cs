@@ -10,7 +10,7 @@ namespace Wallet.Api.Controller;
 public class WalletController(IWalletService walletService, ILogger<WalletController> logger) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetByUserId()
+    public async Task<IActionResult> GetWallet()
     {
         var userId = GetUserIdFromClaims();
         if (userId == Guid.Empty)

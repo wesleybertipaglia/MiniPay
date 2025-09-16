@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using Shared.Core.Dto;
+using User.Core.Dto;
 using User.Core.Interface;
 
 namespace User.Api.Controller;
@@ -30,18 +30,15 @@ public class UserController(IUserService userService) : ControllerBase
     }
 
     [HttpPut]
-    public async Task<IActionResult> Update([FromBody] UserDto userDto)
+    public async Task<IActionResult> Update([FromBody] UserUpdateRequestDto requestDto)
     {
         var userId = GetUserIdFromClaims();
         if (userId == Guid.Empty)
             return Unauthorized();
-
-        if (userDto.Id != userId)
-            return Forbid("You can only update your own user data.");
-
+        
         try
         {
-            var updatedUser = await userService.UpdateAsync(userDto);
+            var updatedUser = await userService.UpdateAsync(userId, requestDto);
             return Ok(updatedUser);
         }
         catch (Exception ex)

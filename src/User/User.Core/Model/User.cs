@@ -1,16 +1,23 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 using Shared.Core.Model;
 
 namespace User.Core.Model;
 
 [Index(nameof(Code), IsUnique = true)]
+[Index(nameof(Email), IsUnique = true)]
 public class User : BaseModel
 {
+    [Required]
+    [MaxLength(100)]
     public string Name { get; set; }
-    
+
+    [Required]
+    [MaxLength(255)]
+    [EmailAddress]
     public string Email { get; set; }
 
-    public bool EmailConfirmed { get; set; }
+    public bool EmailConfirmed { get; set; } = false;
 
     public User() { }
 

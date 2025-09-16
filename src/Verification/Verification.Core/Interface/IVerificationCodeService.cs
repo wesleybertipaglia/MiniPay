@@ -1,6 +1,7 @@
 using Shared.Core.Dto;
 using Verification.Core.Dto;
 using Verification.Core.Enum;
+using VerificationCodeDto = Verification.Core.Dto.VerificationCodeDto;
 
 namespace Verification.Core.Interface;
 

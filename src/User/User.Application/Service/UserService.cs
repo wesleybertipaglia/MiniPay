@@ -1,7 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Shared.Core.Dto;
+using Shared.Core.Helper;
 using Shared.Core.Interface;
-using User.Core.Helper;
+using User.Core.Dto;
 using User.Core.Interface;
 using User.Core.Mapper;
 
@@ -13,6 +14,8 @@ public class UserService(
     ICacheService cacheService)
     : IUserService
 {
+    private static readonly TimeSpan CacheExpiration = TimeSpan.FromMinutes(5);
+
     public async Task<UserDto> GetByIdAsync(Guid id)
     {
         logger.LogDebug("Getting user by ID {UserId}", id);
@@ -28,11 +31,11 @@ public class UserService(
         if (user is null)
         {
             logger.LogWarning("User not found with ID {UserId}", id);
-            throw new Exception($"User not found with ID {id}");
+            throw new KeyNotFoundException($"User not found with ID {id}");
         }
 
-        var mappedUser = user.Map();
-        await CacheUserAsync(mappedUser);
+        var mappedUser = user.ToDto();
+        await SetUserCacheAsync(mappedUser);
 
         logger.LogInformation("User retrieved from database and cached: {UserId}", id);
         return mappedUser;
@@ -46,56 +49,54 @@ public class UserService(
         if (existing != null)
         {
             logger.LogWarning("Attempted to create user that already exists: {UserId}", userDto.Id);
-            throw new Exception($"User with ID {userDto.Id} already exists");
+            throw new InvalidOperationException($"User with ID {userDto.Id} already exists");
         }
 
-        var user = userDto.Map();
+        var user = userDto.ToEntity();
         await userRepository.CreateAsync(user);
-        await InvalidateUserCacheAsync(user);
+        await RemoveUserCacheAsync(user);
 
         logger.LogInformation("User created: {UserId}", user.Id);
-        return user.Map();
+        return user.ToDto();
     }
 
-    public async Task<UserDto> UpdateAsync(UserDto userDto)
+    public async Task<UserDto> UpdateAsync(Guid userId, UserUpdateRequestDto requestDto)
     {
-        logger.LogDebug("Updating user {UserId}", userDto.Id);
+        logger.LogDebug("Updating user {UserId}", userId);
 
-        var user = await userRepository.GetByIdAsync(userDto.Id);
+        var user = await userRepository.GetByIdAsync(userId);
         if (user is null)
         {
-            logger.LogWarning("User not found for update: {UserId}", userDto.Id);
-            throw new Exception($"User not found with ID {userDto.Id}");
+            logger.LogWarning("User not found for update: {UserId}", userId);
+            throw new KeyNotFoundException($"User not found with ID {userId}");
         }
 
-        if (!string.IsNullOrEmpty(userDto.Name)) user.Name = userDto.Name;
-        if (!string.IsNullOrEmpty(userDto.Email)) user.Email = userDto.Email;
+        if (!string.IsNullOrEmpty(requestDto.Name)) user.Name = requestDto.Name;
 
         var updatedUser = await userRepository.UpdateAsync(user);
-        await InvalidateUserCacheAsync(updatedUser);
+        await RemoveUserCacheAsync(updatedUser);
 
         logger.LogInformation("User updated: {UserId}", updatedUser.Id);
-        return updatedUser.Map();
+        return updatedUser.ToDto();
     }
 
-    private async Task CacheUserAsync(UserDto userDto)
+    private async Task SetUserCacheAsync(UserDto userDto)
     {
-        var expiration = TimeSpan.FromMinutes(5);
+        await cacheService.SetAsync(UserCacheKeys.GetUserByIdKey(userDto.Id), userDto, CacheExpiration);
+        await cacheService.SetAsync(UserCacheKeys.GetUserByEmailKey(userDto.Email), userDto, CacheExpiration);
 
-        await cacheService.SetAsync(UserCacheKeys.GetUserByIdKey(userDto.Id), userDto, expiration);
-        await cacheService.SetAsync(UserCacheKeys.GetUserByCodeKey(userDto.Code), userDto, expiration);
-        await cacheService.SetAsync(UserCacheKeys.GetUserByEmailKey(userDto.Email), userDto, expiration);
-
-        logger.LogDebug("Cached user {UserId} with expiration {Expiration}", userDto.Id, expiration);
+        logger.LogDebug("Cached user {UserId} with expiration {Expiration}", userDto.Id, CacheExpiration);
     }
 
     private async Task<UserDto?> GetUserCacheByIdAsync(Guid id)
     {
-        var keyById = UserCacheKeys.GetUserByIdKey(id);
-        return await cacheService.GetAsync<UserDto>(keyById);
+        if (id == Guid.Empty)
+            return null;
+
+        return await cacheService.GetAsync<UserDto>(UserCacheKeys.GetUserByIdKey(id));
     }
 
-    private async Task InvalidateUserCacheAsync(Core.Model.User user)
+    private async Task RemoveUserCacheAsync(Core.Model.User user)
     {
         await cacheService.RemoveAsync(UserCacheKeys.GetUserByIdKey(user.Id));
         await cacheService.RemoveAsync(UserCacheKeys.GetUserByEmailKey(user.Email));

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 using Shared.Core.Enum;
 using Shared.Core.Model;
@@ -5,17 +6,35 @@ using Shared.Core.Model;
 namespace Transaction.Core.Model;
 
 [Index(nameof(Code), IsUnique = true)]
+[Index(nameof(UserId))]
+[Index(nameof(TargetWalletCode))]
+[Index(nameof(TargetTransactionCode))]
 public class Transaction : BaseModel
 {
+    [Required]
     public Guid UserId { get; private set; }
-    public string? TargetTransactionCode { get; private set; }
-    public string? TargetWalletCode { get; private set; }
-    public string Description { get; private set; }
-    public decimal Amount { get; private set; }
-    public TransactionType Type { get; private set; }
-    public TransactionStatus Status { get; private set; }
 
-    private Transaction() { }
+    [MaxLength(12)]
+    public string? TargetTransactionCode { get; private set; }
+
+    [MaxLength(12)]
+    public string? TargetWalletCode { get; private set; }
+
+    [Required]
+    [MaxLength(250)]
+    public string Description { get; private set; }
+
+    [Required]
+    [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be greater than zero.")]
+    public decimal Amount { get; private set; }
+
+    [Required]
+    public TransactionType Type { get; private set; }
+
+    [Required]
+    public TransactionStatus Status { get; private set; } = TransactionStatus.PENDING;
+    
+    private Transaction() {}
 
     public Transaction(
         Guid userId,
@@ -31,72 +50,10 @@ public class Transaction : BaseModel
         Type = type;
         TargetWalletCode = targetWalletCode;
         TargetTransactionCode = targetTransactionCode;
+
         Status = TransactionStatus.PENDING;
-
-        Validate();
     }
 
-    private void Validate()
-    {
-        if (Amount <= 0)
-            throw new ArgumentException("Amount must be greater than zero.");
-
-        ValidateTargetWalletCode();
-        ValidateTargetTransactionCode();
-    }
-
-    private void ValidateTargetWalletCode()
-    {
-        switch (Type)
-        {
-            case TransactionType.DEPOSIT:
-            case TransactionType.WITHDRAW:
-                if (!string.IsNullOrWhiteSpace(TargetWalletCode))
-                    throw new ArgumentException($"TargetWalletCode must be null for {Type.ToString().ToLower()} transactions.");
-                break;
-
-            case TransactionType.TRANSFER:
-            case TransactionType.PAYMENT:
-            case TransactionType.REFUND:
-                if (string.IsNullOrWhiteSpace(TargetWalletCode))
-                    throw new ArgumentException($"TargetWalletCode is required for {Type.ToString().ToLower()} transactions.");
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-    }
-
-    private void ValidateTargetTransactionCode()
-    {
-        switch (Type)
-        {
-            case TransactionType.REFUND:
-                if (string.IsNullOrEmpty(TargetTransactionCode))
-                    throw new ArgumentException("TargetTransactionCode is required for refund transactions.");
-                break;
-
-            default:
-                if (!string.IsNullOrEmpty(TargetTransactionCode))
-                    throw new ArgumentException($"TargetTransactionCode must be null for {Type.ToString().ToLower()} transactions.");
-                break;
-        }
-    }
-
-    public void UpdateStatus(TransactionStatus status)
-    {
-        switch (status)
-        {
-            case TransactionStatus.COMPLETED:
-                MarkAsCompleted();
-                break;
-            case TransactionStatus.FAILED:
-                MarkAsFailed();
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(status), status, null);
-        }
-    }
-    
     public void MarkAsCompleted()
     {
         Status = TransactionStatus.COMPLETED;
@@ -107,5 +64,21 @@ public class Transaction : BaseModel
     {
         Status = TransactionStatus.FAILED;
         Touch();
+    }
+
+    public void UpdateStatus(TransactionStatus newStatus)
+    {
+        switch (newStatus)
+        {
+            case TransactionStatus.COMPLETED:
+                MarkAsCompleted();
+                break;
+            case TransactionStatus.FAILED:
+                MarkAsFailed();
+                break;
+            case TransactionStatus.PENDING:
+            default:
+                throw new ArgumentOutOfRangeException(nameof(newStatus), newStatus, "Invalid status transition.");
+        }
     }
 }

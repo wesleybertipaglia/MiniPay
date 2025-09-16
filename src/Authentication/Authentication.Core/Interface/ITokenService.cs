@@ -1,8 +1,9 @@
+using Authentication.Core.Dto;
 using Authentication.Core.Model;
 
 namespace Authentication.Core.Interface;
 
 public interface ITokenService
 {
-    string GenerateJwtToken(User user);
+    TokenDto GenerateJwtToken(User user);
 }

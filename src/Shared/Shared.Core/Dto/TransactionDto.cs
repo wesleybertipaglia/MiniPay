@@ -6,8 +6,12 @@ public record TransactionDto
 (
     string Code,
     Guid UserId,
+    string? TargetTransactionCode,
+    string? TargetWalletCode,
     string Description,
     decimal Amount,
     TransactionType Type,
-    TransactionStatus Status
+    TransactionStatus Status,
+    DateTime CreatedAt,
+    DateTime UpdatedAt
 );

@@ -1,4 +1,4 @@
-namespace User.Core.Helper;
+namespace Shared.Core.Helper;
 
 public static class UserCacheKeys
 {

@@ -6,7 +6,7 @@ namespace Authentication.Core.Mapper;
 
 public static class UserMapper
 {
-    public static User Map(this SignUpRequestDto dto)
+    public static User ToEntity(this SignUpRequestDto dto)
     {
         return new User
         (
@@ -16,7 +16,7 @@ public static class UserMapper
         );
     }
 
-    public static UserDto Map(this User user)
+    public static UserDto ToDto(this User user)
     {
         return new UserDto
         (

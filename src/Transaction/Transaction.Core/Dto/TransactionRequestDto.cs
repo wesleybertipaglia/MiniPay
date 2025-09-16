@@ -7,7 +7,7 @@ public record TransactionRequestDto
 (
     string? TargetWalletCode,
     string? TargetTransactionCode,
-    TransactionType TransactionType,
+    TransactionType Type,
 
     [Required, MinLength(3)]
     string Description,

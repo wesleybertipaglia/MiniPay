@@ -6,13 +6,6 @@ namespace Authentication.Infrastructure.Repository;
 
 public class UserRepository(AppDbContext context) : IUserRepository
 {
-    public async Task<Core.Model.User?> GetByIdAsync(Guid id)
-    {
-        return await context.Users
-            .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Id == id);
-    }
-
     public async Task<Core.Model.User?> GetByEmailAsync(string email)
     {
         return await context.Users

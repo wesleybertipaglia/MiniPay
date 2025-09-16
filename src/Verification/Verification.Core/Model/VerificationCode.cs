@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 using Shared.Core.Model;
 using Verification.Core.Enum;
@@ -5,18 +6,29 @@ using Verification.Core.Enum;
 namespace Verification.Core.Model;
 
 [Index(nameof(Code), IsUnique = true)]
+[Index(nameof(UserId))]
 public class VerificationCode : BaseModel
 {
-    public Guid UserId { get; init; }
-    public VerificationCodeType Type { get; init; }
-    public string Content { get; init; }
-    public bool Used { get; set; }
-    public DateTime? VerifiedAt { get; set; }
-    public DateTime ExpiresAt { get; init; }
+    [Required]
+    public Guid UserId { get; private set; }
 
+    [Required]
+    public VerificationCodeType Type { get; private set; }
+
+    [Required]
+    [MaxLength(50)]
+    public string Content { get; private set; }
+
+    public bool Used { get; private set; }
+
+    public DateTime? VerifiedAt { get; private set; }
+
+    [Required]
+    public DateTime ExpiresAt { get; private set; }
+    
     protected VerificationCode() { }
 
-    public VerificationCode(Guid userId, VerificationCodeType type): base()
+    public VerificationCode(Guid userId, VerificationCodeType type)
     {
         UserId = userId;
         Type = type;

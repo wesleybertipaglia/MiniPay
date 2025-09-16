@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Authentication.Core.Dto;
 using Authentication.Core.Interface;
 using Authentication.Core.Model;
 using Microsoft.Extensions.Configuration;
@@ -10,7 +11,7 @@ namespace Authentication.Application.Service;
 
 public class TokenService(IConfiguration configuration) : ITokenService
 {
-    public string GenerateJwtToken(User user)
+    public TokenDto GenerateJwtToken(User user)
     {
         var secretKey = configuration["Jwt:SecretKey"]
                         ?? throw new InvalidOperationException("JWT SecretKey is not configured.");
@@ -20,6 +21,8 @@ public class TokenService(IConfiguration configuration) : ITokenService
 
         var audience = configuration["Jwt:Audience"]
                        ?? throw new InvalidOperationException("JWT Audience is not configured.");
+
+        var expires = DateTime.UtcNow.AddHours(1);
         
         var claims = new[]
         {
@@ -35,10 +38,10 @@ public class TokenService(IConfiguration configuration) : ITokenService
             issuer: issuer,
             audience: audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(1),
+            expires: expires,
             signingCredentials: credentials
         );
         
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        return new TokenDto(new JwtSecurityTokenHandler().WriteToken(token), expires);
     }
 }

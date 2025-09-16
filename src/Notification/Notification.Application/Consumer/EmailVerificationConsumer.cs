@@ -27,7 +27,7 @@ public class EmailVerificationConsumer(
 
                 try
                 {
-                    var emailVerificationEventDto = JsonSerializer.Deserialize<EmailVerificationEventDto>(message);
+                    var emailVerificationEventDto = JsonSerializer.Deserialize<VerificationCodeNotificationDto>(message);
 
                     if (emailVerificationEventDto is null)
                     {

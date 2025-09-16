@@ -8,14 +8,14 @@ public interface ITransactionService
 {
     Task<IEnumerable<TransactionSummaryDto>> ListAsync
     (
-        Guid walletId,
+        Guid userId,
         int page = 1,
         int size = 10,
         TransactionType? type = null,
         DateTime? startDate = null,
         DateTime? endDate = null
     );
-    Task<TransactionDetailsDto> GetByIdAsync(Guid id);
-    Task<TransactionDetailsDto> CreateAsync(TransactionRequestDto request, Guid userId);
-    Task<TransactionDetailsDto> UpdateStatusAsync(TransactionDto request, Guid userId);
+    Task<TransactionDto> GetByCodeAsync(string code);
+    Task<TransactionDto> CreateAsync(TransactionRequestDto requestDto, Guid userId);
+    Task<TransactionDto> UpdateStatusAsync(TransactionUpdatesStatusDto requestDto, Guid userId);
 }

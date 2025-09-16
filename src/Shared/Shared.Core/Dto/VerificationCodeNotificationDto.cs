@@ -1,6 +1,6 @@
 namespace Shared.Core.Dto;
 
-public record EmailVerificationEventDto
+public record VerificationCodeNotificationDto
 (
     UserDto User,
     string Code

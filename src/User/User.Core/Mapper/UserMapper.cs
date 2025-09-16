@@ -4,7 +4,7 @@ namespace User.Core.Mapper;
 
 public static class UserMapper
 {
-    public static UserDto Map(this Model.User user)
+    public static UserDto ToDto(this Model.User user)
     {
         return new UserDto
         (
@@ -16,7 +16,7 @@ public static class UserMapper
         );
     }
     
-    public static Model.User Map(this UserDto userDto)
+    public static Model.User ToEntity(this UserDto userDto)
     {
         return new Model.User
         (

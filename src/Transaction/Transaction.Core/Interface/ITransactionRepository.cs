@@ -11,7 +11,6 @@ public interface ITransactionRepository
         TransactionType? type = null,
         DateTime? startDate = null,
         DateTime? endDate = null);
-    Task<Model.Transaction?> GetByIdAsync(Guid id);
     Task<Model.Transaction?> GetByCodeAsync(string code);
     Task<Model.Transaction> CreateAsync(Model.Transaction user);
     Task<Model.Transaction> UpdateAsync(Model.Transaction user);

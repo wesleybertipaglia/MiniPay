@@ -12,17 +12,16 @@ public static class TransactionMapper
             userId: userId,
             targetTransactionCode: transactionRequestDto.TargetTransactionCode,
             targetWalletCode: transactionRequestDto.TargetWalletCode,
-            type:  transactionRequestDto.TransactionType,
+            type:  transactionRequestDto.Type,
             amount: transactionRequestDto.Amount,
             description: transactionRequestDto.Description
         );
     }
     
-    public static TransactionDetailsDto ToDetailsDto(this Model.Transaction transaction)
+    public static TransactionDto ToDetailsDto(this Model.Transaction transaction)
     {
-        return new TransactionDetailsDto
+        return new TransactionDto
         (
-            Id: transaction.Id,
             Code: transaction.Code,
             UserId: transaction.UserId,
             TargetTransactionCode: transaction.TargetTransactionCode,

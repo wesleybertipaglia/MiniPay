@@ -143,13 +143,6 @@ public class TransactionService(
         await RemoveTransactionCacheAsync(updated).ConfigureAwait(false);
 
         var updatedDto = updated.ToDetailsDto();
-        var transactionEventDto = new TransactionEventDto(userDto,  updatedDto, success);
-        var messageJson = JsonSerializer.Serialize(transactionEventDto);
-        
-        await messagePublisher.PublishAsync(
-            exchange: "transaction-exchange",
-            routingKey: "transaction.status.updated",
-            message: messageJson);
 
         logger.LogInformation("Transaction updated and event published. ID: {TransactionId}", updated.Id);
 

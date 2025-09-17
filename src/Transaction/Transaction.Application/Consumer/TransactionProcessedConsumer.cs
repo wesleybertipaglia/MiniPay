@@ -47,7 +47,8 @@ public class TransactionProcessedConsumer(
                     logger.LogInformation("Transaction {Code} status updated to {Status}", updatedTransaction.Code, updatedTransaction.Status);
                     
                     var messagePublisher = scope.ServiceProvider.GetRequiredService<IMessagePublisher>();
-                    var messageJson = JsonSerializer.Serialize(updatedTransaction);
+                    transactionEventDto = new TransactionEventDto(userDto,  updatedTransaction, success);
+                    var messageJson = JsonSerializer.Serialize(transactionEventDto);
 
                     await messagePublisher.PublishAsync(
                         exchange: exchange,

@@ -1,5 +1,6 @@
 using Notification.Core.Dto;
 using Shared.Core.Dto;
+using Shared.Core.Enum;
 
 namespace Notification.Core.Template;
 
@@ -54,6 +55,36 @@ public class EmailTemplate
 
                     Atenciosamente,  
                     Equipe MiniPay
+                    """;
+
+        return new EmailRequestDto(
+            To: userDto.Email,
+            Subject:  subject,
+            Body: body
+        );
+    }
+    
+    public static EmailRequestDto BuildTransactionEmail(UserDto userDto, TransactionDto transactionDto, bool success)
+    {
+        var subject = success
+            ? "✅ Transação concluída com sucesso"
+            : "❌ Falha ao processar transação";
+
+        var body = $"""
+                    Olá!
+
+                    Sua transação foi processada com os seguintes detalhes:
+
+                    • Código: {transactionDto.Code}
+                    • Valor: {transactionDto.Amount:C}
+                    • Tipo: {transactionDto.Type}
+                    • Status: {transactionDto.Status}
+                    • Data: {transactionDto.CreatedAt:dd/MM/yyyy HH:mm}
+
+                    {(success ? "Obrigado por usar nosso serviço!" : "Por favor, verifique sua carteira ou tente novamente.")}
+
+                    Atenciosamente,
+                    Equipe Financeira
                     """;
 
         return new EmailRequestDto(

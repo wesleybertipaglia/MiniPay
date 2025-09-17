@@ -46,17 +46,15 @@ The system consists of the following microservices:
 
 ```text
 Event: user-created                 → `auth service` emits event
-  → queue: new-user                 → `user service` creates profile
-  → queue: new-wallet               → `wallet service` creates wallet
+  → queue: new-user                 → `user service` creates profile  
   → queue: new-email-verification   → `verification service` generates verification code
-    → queue: new-user-notification  → `notification service` sends verification email
+    → queue: new-notification       → `notification service` sends verification email
 ```
 
 * The `user-created` event is published after signup.
 * Each consumer handles part of the process:
 
-  * `user service`: stores user profile (excluding password)
-  * `wallet service`: creates a wallet
+  * `user service`: stores user profile (excluding password)  
   * `verification service`: generates verification code
   * `notification service`: sends verification email
 
@@ -65,23 +63,26 @@ Event: user-created                 → `auth service` emits event
 ```text
 Event: email-confirmed          → `verification service` emits event
   → queue: email-confirmed      → `user service` updates user profile
+  → queue: new-wallet           → `wallet service` creates wallet
 ```
 
 * The `email-confirmed` event is published after the user confirms their email.
 * The `user service` consumes the event to update the user's profile as confirmed.
+* `wallet service`: creates a wallet for the user.
 
 ### Transaction Flow
 
 ```text
-Event: transaction-created                → `transaction service` emits event
-  → queue: update-wallet                  → `wallet service` tries to update balance and emit event
-    → event: wallet-updated               → `wallet service` emits event if balance updated
-      → queue: transaction-processed      → `transaction service` updates transaction status with success/failed
-      → queue: transaction-notification   → `notification service` sends transaction notification with its status
+Event: transaction-created              → `transaction service` emits event
+  → queue: wallet-updated               → `wallet service` tries to update balance and emit event with success/failed
+    → queue: transaction-processed      → `transaction service` updates transaction status with success/failed
+    → queue: transaction-notification   → `notification service` sends transaction notification with its status
 ```
 
 * After a transaction is created, an event is emitted.
-* The `wallet service` consumes the event to update the balance and invalidate cached wallet data in Redis.
+* The `wallet service` consumes the event to update the wallet balance and emits a success or failure event.
+* The `transaction service` updates the transaction status based on the wallet update result.
+* The `notification service` sends a notification about the transaction status.
 
 > **Wallet balances are never updated via API — only through events.**
 

@@ -66,19 +66,11 @@ public class Transaction : BaseModel
         Touch();
     }
 
-    public void UpdateStatus(TransactionStatus newStatus)
+    public void UpdateStatus(bool success)
     {
-        switch (newStatus)
-        {
-            case TransactionStatus.COMPLETED:
-                MarkAsCompleted();
-                break;
-            case TransactionStatus.FAILED:
-                MarkAsFailed();
-                break;
-            case TransactionStatus.PENDING:
-            default:
-                throw new ArgumentOutOfRangeException(nameof(newStatus), newStatus, "Invalid status transition.");
-        }
+        if (success)
+            MarkAsCompleted();
+        else
+            MarkAsFailed();
     }
 }

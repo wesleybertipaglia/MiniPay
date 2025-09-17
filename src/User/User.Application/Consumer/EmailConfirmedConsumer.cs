@@ -2,12 +2,10 @@ using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Notification.Core.Interface;
-using Notification.Core.Template;
-using Shared.Core.Dto;
 using Shared.Core.Interface;
+using User.Core.Interface;
 
-namespace Notification.Application.Consumer;
+namespace User.Application.Consumer;
 
 public class EmailConfirmedConsumer(
     IServiceProvider serviceProvider,
@@ -16,9 +14,9 @@ public class EmailConfirmedConsumer(
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var messageConsumer = serviceProvider.GetRequiredService<IMessageConsumer>();
-        
+
         const string exchange = "user-exchange";
-        const string queue = "new-notification";
+        const string queue = "email-confirmed";
         const string routingKey = "email.confirmed";
 
         logger.LogInformation("Starting consumer for queue '{Queue}' on exchange '{Exchange}' with routing key '{RoutingKey}'",
@@ -30,32 +28,31 @@ public class EmailConfirmedConsumer(
             routingKey: routingKey,
             onMessageReceived: async (message) =>
             {
-                using var scope = serviceProvider.CreateScope();
-
                 try
                 {
-                    var userDto = JsonSerializer.Deserialize<UserDto>(message);
-
-                    if (userDto is null)
+                    var doc = JsonDocument.Parse(message);
+                    if (!doc.RootElement.TryGetProperty("userId", out var userIdProperty))
                     {
-                        logger.LogWarning("Received null or invalid UserDto in email.confirmed message: {RawMessage}", message);
+                        logger.LogWarning("Message does not contain 'userId' property: {Message}", message);
                         return;
                     }
 
-                    var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
-                    var emailRequest = EmailTemplate.BuildWelcomeEmail(userDto);
+                    var userId = userIdProperty.GetGuid();
 
-                    await emailService.SendEmailAsync(emailRequest);
+                    using var scope = serviceProvider.CreateScope();
+                    var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
 
-                    logger.LogInformation("Welcome email sent to user {UserId} ({Email})", userDto.Id, userDto.Email);
+                    await userService.ConfirmEmailAsync(userId);
+
+                    logger.LogInformation("Successfully processed 'email.confirmed' event for user ID {UserId}", userId);
                 }
-                catch (JsonException jsonEx)
+                catch (JsonException ex)
                 {
-                    logger.LogError(jsonEx, "Failed to deserialize message in email.confirmed: {Message}", message);
+                    logger.LogError(ex, "Failed to deserialize message: {Message}", message);
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "Unhandled error while processing email.confirmed event for user");
+                    logger.LogError(ex, "Failed to process 'email.confirmed' event");
                 }
             });
     }

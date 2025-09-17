@@ -73,11 +73,31 @@ public class UserService(
 
         if (!string.IsNullOrEmpty(requestDto.Name)) user.Name = requestDto.Name;
 
+        user.Touch();
         var updatedUser = await userRepository.UpdateAsync(user);
         await RemoveUserCacheAsync(updatedUser);
 
         logger.LogInformation("User updated: {UserId}", updatedUser.Id);
         return updatedUser.ToDto();
+    }
+    
+    public async Task ConfirmEmailAsync(Guid userId)
+    {
+        logger.LogDebug("Updating user {UserId}", userId);
+
+        var user = await userRepository.GetByIdAsync(userId);
+        if (user is null)
+        {
+            logger.LogWarning("User not found for update: {UserId}", userId);
+            throw new KeyNotFoundException($"User not found with ID {userId}");
+        }
+        
+        user.ConfirmEmail();
+        
+        var updatedUser = await userRepository.UpdateAsync(user);
+        await RemoveUserCacheAsync(updatedUser);
+
+        logger.LogInformation("User updated: {UserId}", updatedUser.Id);
     }
 
     private async Task SetUserCacheAsync(UserDto userDto)

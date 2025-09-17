@@ -17,11 +17,18 @@ public class UserCreatedConsumer(
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var messageConsumer = serviceProvider.GetRequiredService<IMessageConsumer>();
+        
+        const string exchange = "user-exchange";
+        const string queue = "new-verification";
+        const string routingKey = "user.created";
+
+        logger.LogInformation("Starting consumer for queue '{Queue}' on exchange '{Exchange}' with routing key '{RoutingKey}'",
+            queue, exchange, routingKey);
 
         await messageConsumer.ConsumeAsync(
-            exchange: "user-exchange",
-            queue: "new-email-verification",
-            routingKey: "user.created",
+            exchange: exchange,
+            queue: queue,
+            routingKey: routingKey,
             async message =>
             {
                 try

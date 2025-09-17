@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Shared.Core.Dto;
 using Shared.Core.Enum;
@@ -13,7 +14,8 @@ namespace Transaction.Application.Service;
 public class TransactionService(
     ITransactionRepository transactionRepository,
     ILogger<TransactionService> logger,
-    ICacheService cacheService)
+    ICacheService cacheService,
+    IMessagePublisher messagePublisher)
     : ITransactionService
 {
     public async Task<IEnumerable<TransactionSummaryDto>> ListAsync(
@@ -74,14 +76,14 @@ public class TransactionService(
         return dto;
     }
 
-    public async Task<TransactionDto> CreateAsync(TransactionRequestDto requestDto, Guid userId)
+    public async Task<TransactionDto> CreateAsync(UserDto userDto, TransactionRequestDto requestDto)
     {
         ArgumentNullException.ThrowIfNull(requestDto);
         
-        if (userId == Guid.Empty)
-            throw new ArgumentNullException(nameof(userId));
+        if (userDto.Id == Guid.Empty)
+            throw new ArgumentNullException(nameof(userDto.Id));
 
-        logger.LogDebug("Creating new transaction for user {UserId}", userId);
+        logger.LogDebug("Creating new transaction for user {UserId}", userDto.Id);
         
         TransactionValidator.Validate(
             type: requestDto.Type,
@@ -89,52 +91,69 @@ public class TransactionService(
             targetTransactionCode: requestDto.TargetTransactionCode
         );
         
-        var transaction = requestDto.ToEntity(userId);
+        var transaction = requestDto.ToEntity(userDto.Id);
 
         await transactionRepository.CreateAsync(transaction).ConfigureAwait(false);
         await RemoveTransactionCacheAsync(transaction).ConfigureAwait(false);
 
-        logger.LogInformation("Transaction successfully created: {TransactionId}", transaction.Id);
+        var transactionDto = transaction.ToDetailsDto();
+        var transactionEventDto = new TransactionEventDto(userDto,  transactionDto, false);
+        var messageJson = JsonSerializer.Serialize(transactionEventDto);
+        
+        await messagePublisher.PublishAsync(
+            exchange: "transaction-exchange",
+            routingKey: "transaction.created",
+            message: messageJson);
 
-        return transaction.ToDetailsDto();
+        logger.LogInformation("Transaction created and event published: {TransactionId}", transaction.Id);
+
+        return transactionDto;
     }
 
-    public async Task<TransactionDto> UpdateStatusAsync(TransactionUpdatesStatusDto requestDto, Guid userId)
+    
+    public async Task<TransactionDto> UpdateStatusAsync(UserDto userDto, TransactionDto transactionDto, bool success)
     {
-        ArgumentNullException.ThrowIfNull(requestDto);
-        
-        if (userId == Guid.Empty)
-            throw new ArgumentNullException(nameof(userId));
+        ArgumentNullException.ThrowIfNull(userDto);
+        ArgumentNullException.ThrowIfNull(transactionDto);
 
-        logger.LogDebug("Updating transaction status. Code: {TransactionCode}, UserId: {UserId}", requestDto.Code, userId);
+        logger.LogDebug("Updating transaction status. Code: {TransactionCode}, UserId: {UserId}", transactionDto.Code, userDto.Id);
 
-        var transaction = await transactionRepository.GetByCodeAsync(requestDto.Code).ConfigureAwait(false);
+        var transaction = await transactionRepository.GetByCodeAsync(transactionDto.Code).ConfigureAwait(false);
         if (transaction is null)
         {
-            logger.LogWarning("Transaction not found for update. Code: {TransactionCode}", requestDto.Code);
-            throw new KeyNotFoundException($"Transaction with code {requestDto.Code} not found.");
+            logger.LogWarning("Transaction not found for update. Code: {TransactionCode}", transactionDto.Code);
+            throw new KeyNotFoundException($"Transaction with code {transactionDto.Code} not found.");
         }
 
-        if (transaction.UserId != userId)
+        if (transaction.UserId != userDto.Id)
         {
-            logger.LogWarning("User {UserId} unauthorized to update transaction {TransactionCode}", userId, requestDto.Code);
+            logger.LogWarning("User {UserId} unauthorized to update transaction {TransactionCode}", userDto.Id, transactionDto.Code);
             throw new UnauthorizedAccessException("You do not have permission to update this transaction.");
         }
-        
+
         TransactionValidator.Validate(
             type: transaction.Type,
             targetWalletCode: transaction.TargetWalletCode,
             targetTransactionCode: transaction.TargetTransactionCode
         );
 
-        transaction.UpdateStatus(requestDto.Status);
+        transaction.UpdateStatus(success);
 
         var updated = await transactionRepository.UpdateAsync(transaction).ConfigureAwait(false);
         await RemoveTransactionCacheAsync(updated).ConfigureAwait(false);
 
-        logger.LogInformation("Transaction updated successfully. ID: {TransactionId}", updated.Id);
+        var updatedDto = updated.ToDetailsDto();
+        var transactionEventDto = new TransactionEventDto(userDto,  updatedDto, success);
+        var messageJson = JsonSerializer.Serialize(transactionEventDto);
+        
+        await messagePublisher.PublishAsync(
+            exchange: "transaction-exchange",
+            routingKey: "transaction.status.updated",
+            message: messageJson);
 
-        return updated.ToDetailsDto();
+        logger.LogInformation("Transaction updated and event published. ID: {TransactionId}", updated.Id);
+
+        return updatedDto;
     }
     
     private async Task<TransactionDto?> GetTransactionCacheByCodeAsync(string code)

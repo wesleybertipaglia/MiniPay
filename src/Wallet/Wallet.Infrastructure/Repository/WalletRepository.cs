@@ -12,7 +12,14 @@ public class WalletRepository(AppDbContext context) : IWalletRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.UserId == userId);
     }
-    
+
+    public async Task<Core.Model.Wallet?> GetByCodeAsync(string code)
+    {
+        return await context.Wallets
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Code.Equals(code, StringComparison.CurrentCultureIgnoreCase));
+    }
+
     public async Task<Core.Model.Wallet> CreateAsync(Core.Model.Wallet wallet)
     {
         await context.Wallets.AddAsync(wallet);

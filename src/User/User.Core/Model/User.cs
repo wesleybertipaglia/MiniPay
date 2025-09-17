@@ -17,7 +17,7 @@ public class User : BaseModel
     [EmailAddress]
     public string Email { get; set; }
 
-    public bool EmailConfirmed { get; set; } = false;
+    public bool EmailConfirmed { get; set; }
 
     public User() { }
 
@@ -27,5 +27,11 @@ public class User : BaseModel
         Code = code;
         Name = name;
         Email = email;
+    }
+
+    public void ConfirmEmail()
+    {
+        EmailConfirmed = true;
+        Touch();
     }
 }

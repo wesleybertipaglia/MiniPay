@@ -16,6 +16,6 @@ public interface ITransactionService
         DateTime? endDate = null
     );
     Task<TransactionDto> GetByCodeAsync(string code);
-    Task<TransactionDto> CreateAsync(TransactionRequestDto requestDto, Guid userId);
-    Task<TransactionDto> UpdateStatusAsync(TransactionUpdatesStatusDto requestDto, Guid userId);
+    Task<TransactionDto> CreateAsync(UserDto userDto, TransactionRequestDto requestDto);
+    Task<TransactionDto> UpdateStatusAsync(UserDto userDto, TransactionDto transactionDto, bool success);
 }

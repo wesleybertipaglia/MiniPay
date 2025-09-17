@@ -53,7 +53,7 @@ public class VerificationCodeService(
         }
         else
         {
-            var emailVerificationEvent = new VerificationCodeNotificationDto(cachedUser, created.Content);
+            var emailVerificationEvent = new VerificationEventDto(cachedUser, created.Content);
             var messageJson = JsonSerializer.Serialize(emailVerificationEvent);
 
             await messagePublisher.PublishAsync(

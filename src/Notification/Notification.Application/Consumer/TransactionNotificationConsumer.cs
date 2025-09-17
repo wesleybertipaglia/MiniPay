@@ -9,21 +9,21 @@ using Shared.Core.Interface;
 
 namespace Notification.Application.Consumer;
 
-public class EmailVerificationConsumer(
+public class TransactionNotificationConsumer(
     IServiceProvider serviceProvider,
-    ILogger<EmailVerificationConsumer> logger) : BackgroundService
+    ILogger<TransactionNotificationConsumer> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var messageConsumer = serviceProvider.GetRequiredService<IMessageConsumer>();
-        
-        const string exchange = "user-exchange";
-        const string queue = "new-notification";
-        const string routingKey = "email.verification";
+
+        const string exchange = "transaction-exchange";
+        const string queue = "transaction-notification";
+        const string routingKey = "transaction.notification";
 
         logger.LogInformation("Starting consumer for queue '{Queue}' on exchange '{Exchange}' with routing key '{RoutingKey}'",
             queue, exchange, routingKey);
-        
+
         await messageConsumer.ConsumeAsync(
             exchange: exchange,
             queue: queue,
@@ -34,34 +34,30 @@ public class EmailVerificationConsumer(
 
                 try
                 {
-                    var emailVerificationEventDto = JsonSerializer.Deserialize<VerificationEventDto>(message);
+                    var transactionEventDto = JsonSerializer.Deserialize<TransactionEventDto>(message);
 
-                    if (emailVerificationEventDto is null)
+                    if (transactionEventDto is null)
                     {
-                        logger.LogWarning("Received null or invalid EmailVerificationEventDto: {RawMessage}", message);
+                        logger.LogWarning("Received null or invalid TransactionDto in transaction.notification message: {RawMessage}", message);
                         return;
                     }
-
+                    
+                    var (userDto, transactionDto, success) = transactionEventDto;
                     var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
-
-                    var emailRequest = EmailTemplate.BuildConfirmEmail(emailVerificationEventDto.User, emailVerificationEventDto.Code);
+                    var emailRequest = EmailTemplate.BuildTransactionEmail(userDto, transactionDto, success);
 
                     await emailService.SendEmailAsync(emailRequest);
 
-                    logger.LogInformation(
-                        "Verification email sent to user {UserId} ({Email}) with code {Code}",
-                        emailVerificationEventDto.User.Id,
-                        emailVerificationEventDto.User.Email,
-                        emailVerificationEventDto.Code
-                    );
+                    logger.LogInformation("Transaction notification email sent. Code: {Code}, UserId: {UserId}, Success: {Success}",
+                        transactionDto.Code, userDto.Id, success);
                 }
                 catch (JsonException jsonEx)
                 {
-                    logger.LogError(jsonEx, "Failed to deserialize message in email.verification: {Message}", message);
+                    logger.LogError(jsonEx, "Failed to deserialize message in transaction.notification: {Message}", message);
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "Failed to process email.verification event");
+                    logger.LogError(ex, "Unhandled error while processing transaction.notification event");
                 }
             });
     }

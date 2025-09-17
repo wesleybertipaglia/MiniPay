@@ -8,21 +8,21 @@ using Wallet.Core.Interface;
 
 namespace Wallet.Application.Consumer;
 
-public class UserCreatedConsumer(
+public class EmailConfirmedConsumer(
     IServiceProvider serviceProvider,
-    ILogger<UserCreatedConsumer> logger) : BackgroundService
+    ILogger<EmailConfirmedConsumer> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var messageConsumer = serviceProvider.GetRequiredService<IMessageConsumer>();
-
+        
         const string exchange = "user-exchange";
-        const string queue = "wallet-user-created";
-        const string routingKey = "user.created";
+        const string queue = "new-wallet";
+        const string routingKey = "email.confirmed";
 
-        logger.LogInformation("Wallet service listening to '{Queue}' on exchange '{Exchange}' with routing key '{RoutingKey}'",
+        logger.LogInformation("Starting consumer for queue '{Queue}' on exchange '{Exchange}' with routing key '{RoutingKey}'",
             queue, exchange, routingKey);
-
+        
         await messageConsumer.ConsumeAsync(
             exchange: exchange,
             queue: queue,

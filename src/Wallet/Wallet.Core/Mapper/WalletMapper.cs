@@ -4,7 +4,7 @@ namespace Wallet.Core.Mapper;
 
 public static class WalletMapper
 {
-    public static WalletDto Map(this Model.Wallet wallet)
+    public static WalletDto ToDto(this Model.Wallet wallet)
     {
         return new WalletDto
         (
@@ -15,17 +15,6 @@ public static class WalletMapper
             Country: wallet.Country,
             Currency: wallet.Currency,
             Type: wallet.Type
-        );
-    }
-    
-    public static Model.Wallet Map(this WalletCreateRequestDto createRequestDto, Guid userId)
-    {
-        return new Model.Wallet
-        (
-            userId:  userId,
-            country:  createRequestDto.Country,
-            currency:  createRequestDto.Currency,
-            type:  createRequestDto.Type
         );
     }
 }

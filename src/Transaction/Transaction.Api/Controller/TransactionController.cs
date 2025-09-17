@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Shared.Core.Dto;
 using Shared.Core.Enum;
 using Transaction.Core.Dto;
 using Transaction.Core.Interface;
@@ -62,7 +63,8 @@ public class TransactionController(ITransactionService transactionService) : Con
 
         try
         {
-            var transaction = await transactionService.CreateAsync(request, userId);
+            var userDto = GetUserFromClaims();
+            var transaction = await transactionService.CreateAsync(userDto, request);
             return CreatedAtAction(nameof(GetByCode), new { code = transaction.Code }, transaction);
         }
         catch (Exception ex)
@@ -75,5 +77,24 @@ public class TransactionController(ITransactionService transactionService) : Con
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
         return Guid.TryParse(userIdClaim?.Value, out var userId) ? userId : Guid.Empty;
+    }
+    
+    private UserDto GetUserFromClaims()
+    {
+        var idClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
+        var nameClaim = User.FindFirst(ClaimTypes.Name);
+        var emailClaim = User.FindFirst(ClaimTypes.Email);
+
+        var userId = Guid.TryParse(idClaim?.Value, out var id) ? id : Guid.Empty;
+        var name = nameClaim?.Value ?? string.Empty;
+        var email = emailClaim?.Value ?? string.Empty;
+
+        return new UserDto(
+            Id: userId,
+            Email: email,
+            Code: string.Empty,
+            EmailConfirmed: true,
+            Name: name
+        );
     }
 }

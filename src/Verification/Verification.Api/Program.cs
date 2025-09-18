@@ -100,6 +100,7 @@ try
     builder.Services.AddScoped<IVerificationCodeService, VerificationCodeService>();
     builder.Services.AddScoped<ICacheService, RedisCacheService>();
     builder.Services.AddSingleton<IMessageConsumer, RabbitMqConsumer>();
+    builder.Services.AddSingleton<IMessagePublisher, RabbitMqPublisher>();
     builder.Services.AddHostedService<UserCreatedConsumer>();
 
     var app = builder.Build();

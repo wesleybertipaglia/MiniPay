@@ -1,0 +1,177 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/auth/signin",
+      "UpstreamPathTemplate": "/api/auth/signin",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "auth-service",
+          "Port": 5001
+        }
+      ],
+      "UpstreamHttpMethod": ["POST"],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": ["api1"]
+      },
+      "RateLimitOptions": {
+        "ClientIdHeader": "X-ClientId",
+        "Limit": 100,
+        "Period": "1s"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/auth/signup",
+      "UpstreamPathTemplate": "/api/auth/signup",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "auth-service",
+          "Port": 5001
+        }
+      ],
+      "UpstreamHttpMethod": ["POST"],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": ["api1"]
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/user",
+      "UpstreamPathTemplate": "/api/user",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "user-service",
+          "Port": 5002
+        }
+      ],
+      "UpstreamHttpMethod": ["GET"],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": ["api2"]
+      },
+      "RateLimitOptions": {
+        "ClientIdHeader": "X-ClientId",
+        "Limit": 10,
+        "Period": "1m"
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/user",
+      "UpstreamPathTemplate": "/api/user",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "user-service",
+          "Port": 5002
+        }
+      ],
+      "UpstreamHttpMethod": ["PUT"],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": ["api2"]
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/wallet",
+      "UpstreamPathTemplate": "/api/wallet",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "wallet-service",
+          "Port": 5003
+        }
+      ],
+      "UpstreamHttpMethod": ["GET"],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": ["api3"]
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/wallet",
+      "UpstreamPathTemplate": "/api/wallet",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "wallet-service",
+          "Port": 5003
+        }
+      ],
+      "UpstreamHttpMethod": ["PUT"],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": ["api3"]
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/transaction",
+      "UpstreamPathTemplate": "/api/transaction",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "transaction-service",
+          "Port": 5004
+        }
+      ],
+      "UpstreamHttpMethod": ["GET"],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": ["api4"]
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/transaction/{code}",
+      "UpstreamPathTemplate": "/api/transaction/{code}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "transaction-service",
+          "Port": 5004
+        }
+      ],
+      "UpstreamHttpMethod": ["GET"],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": ["api4"]
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/transaction",
+      "UpstreamPathTemplate": "/api/transaction",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "transaction-service",
+          "Port": 5004
+        }
+      ],
+      "UpstreamHttpMethod": ["POST"],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": ["api4"]
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/verification/confirm-email/{code}",
+      "UpstreamPathTemplate": "/api/verification/confirm-email/{code}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "verification-service",
+          "Port": 5005
+        }
+      ],
+      "UpstreamHttpMethod": ["GET"],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": ["api5"]
+      }
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "https://localhost:5000"
+  }
+}

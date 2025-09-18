@@ -55,6 +55,7 @@ try
     builder.Services.AddScoped<IAuthService, AuthService>();
     builder.Services.AddScoped<ITokenService, TokenService>();
     builder.Services.AddScoped<ICacheService, RedisCacheService>();
+    builder.Services.AddScoped<IMessagePublisher, RabbitMqPublisher>();
 
     var app = builder.Build();
 

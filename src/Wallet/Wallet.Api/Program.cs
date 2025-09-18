@@ -98,6 +98,8 @@ try
     builder.Services.AddScoped<IWalletRepository, WalletRepository>();
     builder.Services.AddScoped<IWalletService, WalletService>();
     builder.Services.AddScoped<ICacheService, RedisCacheService>();
+    builder.Services.AddSingleton<IMessageConsumer, RabbitMqConsumer>();
+    builder.Services.AddSingleton<IMessagePublisher, RabbitMqPublisher>();
 
     var app = builder.Build();
 

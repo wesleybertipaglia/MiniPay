@@ -101,6 +101,7 @@ try
     builder.Services.AddScoped<ICacheService, RedisCacheService>();
     builder.Services.AddSingleton<IMessageConsumer, RabbitMqConsumer>();
     builder.Services.AddHostedService<UserCreatedConsumer>();
+    builder.Services.AddHostedService<EmailConfirmedConsumer>();
 
     var app = builder.Build();
 

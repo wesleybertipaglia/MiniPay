@@ -20,7 +20,7 @@ public class RabbitMqPublisher(ILogger<RabbitMqPublisher> logger) : IMessagePubl
 
             await channel.ExchangeDeclareAsync(
                 exchange: exchange,
-                type: ExchangeType.Direct,
+                type: ExchangeType.Topic,
                 durable: true
             );
 
